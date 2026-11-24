@@ -50,7 +50,7 @@ Generado por `npm run data`. Revisar los valores marcados.
 ### La Bombonera (`bombonera`)
 - Candidatos: `way/248598885` La Bombonera
 - Elemento usado: `way/248598885` (automático: fijarlo con `osm` si es correcto)
-- Rumbo: 333° manual ⚠️ revisar (pista 0° ajustada a la pared más cercana)
+- Rumbo: 153° manual ⚠️ revisar (pista 150° ajustada a la pared más cercana)
 - Diámetro equivalente: 145.5 m · simetría 1
 - Modificadores: tamaño ✔ · orientación ✔
 

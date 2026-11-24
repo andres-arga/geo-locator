@@ -11,7 +11,7 @@
     { "id": "teatro-colon", "name": "Teatro Colón", "select": "nwr[\"name\"=\"Teatro Colón\"]", "symmetry": 1, "entrance": "node/4293917813" },
     { "id": "recoleta", "name": "Cementerio de la Recoleta", "select": "nwr[\"name\"~\"Cementerio de (la )?Recoleta\"]", "symmetry": 1 },
     { "id": "planetario", "name": "Planetario Galileo Galilei", "select": "nwr[\"name\"~\"Planetario\"][\"name\"~\"Galilei\"]", "symmetry": "radial" },
-    { "id": "bombonera", "name": "La Bombonera", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bombonera|Alberto J\\\\. Armando\"]", "symmetry": 1, "facadeHint": 0 },
+    { "id": "bombonera", "name": "La Bombonera", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bombonera|Alberto J\\\\. Armando\"]", "symmetry": 1, "facadeHint": 150 },
     { "id": "puente-mujer", "name": "Puente de la Mujer", "select": "nwr[\"name\"=\"Puente de la Mujer\"]", "symmetry": 2, "bridgeWidthM": 6.2, "mergeCandidates": true },
     { "id": "floralis", "name": "Floralis Genérica", "select": "nwr[\"name\"~\"Floralis\"]", "symmetry": "radial" },
     { "id": "monumental", "name": "Estadio Monumental", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2 },

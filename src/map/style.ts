@@ -36,8 +36,9 @@ const ALL: MapLevel[] = ["easy", "medium", "hard"];
 const EASY: MapLevel[] = ["easy"];
 const EASY_MEDIUM: MapLevel[] = ["easy", "medium"];
 
+// No "grass": stadium pitches are often tagged landuse=grass and would reveal them.
 const GREEN_KINDS = [
-  "park", "garden", "grass", "recreation_ground", "nature_reserve",
+  "park", "garden", "recreation_ground", "nature_reserve",
   "village_green", "cemetery", "golf_course", "playground", "wood", "forest",
 ];
 
