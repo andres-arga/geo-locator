@@ -1,0 +1,37 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+:root {
+  --ink: #2b2540;
+  --accent: #5b4a8b;
+  --paper: #f7f4ec;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+}
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; }
+body { background: var(--paper); }
+
+.map { position: absolute; inset: 0; }
+
+.compass {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+}
+
+.dev-toolbar {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 3;
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center;
+  background: rgba(255,255,255,.92); border-radius: 10px; padding: 6px 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 14px;
+}
+.dev-toolbar button {
+  border: 1px solid var(--accent); background: #fff; color: var(--accent);
+  border-radius: 6px; padding: 4px 10px; cursor: pointer; font: inherit;
+}
+.dev-toolbar button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+.notice {
+  position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%); z-index: 3;
+  max-width: min(560px, calc(100% - 32px));
+  background: #fff3cd; border: 1px solid #e0c36b; border-radius: 8px; padding: 8px 12px; font-size: 13px;
+}

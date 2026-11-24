@@ -1,0 +1,28 @@
+{
+  "name": "geo-locator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "tiles": "bash scripts/build-tiles.sh",
+    "fonts": "bash scripts/fetch-fonts.sh",
+    "data": "tsx scripts/fetch-osm.ts"
+  },
+  "dependencies": {
+    "@turf/turf": "^7.4.0",
+    "maplibre-gl": "^6.19.0",
+    "pmtiles": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "osmtogeojson": "^3.0.0-beta.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
