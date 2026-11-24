@@ -41,6 +41,12 @@ const GREEN_KINDS = [
   "village_green", "cemetery", "golf_course", "playground", "wood", "forest",
 ];
 
+// Road classes, matched on the Protomaps `kind_detail` (OSM highway=*) property.
+const HIGHWAYS = ["motorway", "motorway_link"];
+const AVENUES = ["trunk", "trunk_link", "primary", "primary_link"];
+const SECONDARY = ["secondary", "secondary_link", "tertiary", "tertiary_link"];
+const MINOR = ["residential", "unclassified", "living_street"];
+
 function meta(levels: MapLevel[], extra: Partial<GeoMeta> = {}): GeoMeta {
   return { "geo:levels": levels, ...extra };
 }
@@ -85,17 +91,24 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       type: "fill",
       source: "osm",
       "source-layer": "water",
+      // Areas only, and no fountains/pools (they would mark landmarks such as Floralis).
+      filter: [
+        "all",
+        ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
+        ["in", ["get", "kind"], ["literal", ["water", "ocean", "lake", "river"]]],
+      ],
       paint: { "fill-color": COLORS.water },
       metadata: meta(EASY_MEDIUM),
     },
-    roadLine("roads-minor-casing", ["minor_road", "other"], COLORS.minorCasing, [[13, 0.5], [17, 9]], EASY, 12.5),
-    roadLine("roads-minor", ["minor_road", "other"], COLORS.minor, [[13, 0.3], [17, 7]], EASY, 12.5),
+    roadLine("roads-minor-casing", MINOR, COLORS.minorCasing, [[12.5, 0.5], [17, 9]], EASY, 12.5),
+    roadLine("roads-minor", MINOR, COLORS.minor, [[12.5, 0.3], [17, 7]], EASY, 12.5),
     {
       id: "rail",
       type: "line",
       source: "osm",
       "source-layer": "roads",
-      filter: ["==", ["get", "kind"], "rail"],
+      // Surface railways only: no subway, platforms or dismantled lines.
+      filter: ["all", ["==", ["get", "kind"], "rail"], ["==", ["get", "kind_detail"], "rail"]],
       paint: {
         "line-color": COLORS.rail,
         "line-width": ["interpolate", ["linear"], ["zoom"], 11, 0.6, 17, 2],
@@ -103,10 +116,12 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       },
       metadata: meta(EASY),
     },
-    roadLine("roads-major-casing", ["major_road"], COLORS.majorCasing, [[11, 0.8], [17, 14]], EASY_MEDIUM),
-    roadLine("roads-major", ["major_road"], COLORS.major, [[11, 0.5], [17, 11]], EASY_MEDIUM),
-    roadLine("roads-highway-casing", ["highway"], COLORS.highwayCasing, [[10, 1.2], [17, 17]], EASY_MEDIUM),
-    roadLine("roads-highway", ["highway"], COLORS.highway, [[10, 0.8], [17, 13]], EASY_MEDIUM),
+    roadLine("roads-secondary-casing", SECONDARY, COLORS.majorCasing, [[11, 0.6], [17, 12]], EASY),
+    roadLine("roads-secondary", SECONDARY, COLORS.major, [[11, 0.4], [17, 9.5]], EASY),
+    roadLine("roads-major-casing", AVENUES, COLORS.majorCasing, [[11, 0.9], [17, 15]], EASY_MEDIUM),
+    roadLine("roads-major", AVENUES, COLORS.major, [[11, 0.6], [17, 12]], EASY_MEDIUM),
+    roadLine("roads-highway-casing", HIGHWAYS, COLORS.highwayCasing, [[10, 1.2], [17, 17]], EASY_MEDIUM),
+    roadLine("roads-highway", HIGHWAYS, COLORS.highway, [[10, 0.8], [17, 13]], EASY_MEDIUM),
     {
       id: "city-boundary",
       type: "line",
@@ -125,7 +140,7 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       minzoom: 13.5,
       filter: [
         "all",
-        ["in", ["get", "kind"], ["literal", ["highway", "major_road", "minor_road"]]],
+        ["in", ["get", "kind"], ["literal", ["highway", "major_road", "minor_road", "other"]]],
         ["has", "name"],
         ["!", ["in", ["get", "name"], ["literal", hidden]]],
       ],
@@ -147,7 +162,8 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
 
   return {
     version: 8,
-    glyphs: abs("fonts/{fontstack}/{range}.pbf"),
+    // Built by concatenation: new URL() would percent-encode the {tokens}.
+    glyphs: `${abs("fonts/")}{fontstack}/{range}.pbf`,
     sources: {
       osm: {
         type: "vector",
@@ -164,7 +180,7 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
 
 function roadLine(
   id: string,
-  kinds: string[],
+  details: string[],
   color: string,
   widths: [number, number][],
   levels: MapLevel[],
@@ -176,7 +192,7 @@ function roadLine(
     source: "osm",
     "source-layer": "roads",
     ...(minzoom !== undefined ? { minzoom } : {}),
-    filter: ["in", ["get", "kind"], ["literal", kinds]],
+    filter: ["in", ["get", "kind_detail"], ["literal", details]],
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": color,

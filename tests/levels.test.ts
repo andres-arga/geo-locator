@@ -17,11 +17,12 @@ describe("map levels", () => {
     expect(ids).toEqual(expect.arrayContaining(["roads-major", "roads-highway", "water", "major-parks", "city-boundary"]));
     expect(ids).not.toContain("roads-minor");
     expect(ids).not.toContain("rail");
+    expect(ids).not.toContain("roads-secondary");
     expect(ids).not.toContain("street-names");
   });
 
   it("easy shows everything; street names depend on the toggle", () => {
-    expect(visibleIds("easy")).toEqual(expect.arrayContaining(["roads-minor", "rail", "landuse-green"]));
+    expect(visibleIds("easy")).toEqual(expect.arrayContaining(["roads-minor", "roads-secondary", "rail", "landuse-green"]));
     expect(visibleIds("easy")).not.toContain("street-names");
     expect(visibleIds("easy", true)).toContain("street-names");
   });

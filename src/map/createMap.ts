@@ -1,6 +1,9 @@
 import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { Protocol } from "pmtiles";
+// MapLibre v6 resolves its worker relative to its own module URL, which breaks once
+// bundled; let Vite bundle the worker and hand MapLibre the resulting URL.
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { CityConfig } from "../cities";
 import { buildStyle } from "./style";
 import { createCompass } from "./compass";
@@ -14,6 +17,7 @@ export interface CreateMapResult {
 
 export function createMap(container: HTMLElement, city: CityConfig, baseUrl: string): CreateMapResult {
   if (!protocolRegistered) {
+    maplibregl.setWorkerUrl(workerUrl);
     maplibregl.addProtocol("pmtiles", new Protocol().tile);
     protocolRegistered = true;
   }
