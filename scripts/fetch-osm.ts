@@ -142,114 +142,130 @@ async function main() {
     type: "FeatureCollection",
     features: [{ type: "Feature", properties: { osm: bRef }, geometry: roundGeometry(boundary.geometry) }],
   });
-  report.push(`- Límite: \`${bRef}\`, ${(turf.area(boundary) / 1e6).toFixed(1)} km²`);
-
-  // Major parks (medium level) ---------------------------------------------
-  console.log("Major parks");
-  const parksRaw = await overpass(
-    `${header(180)}(way["leisure"="park"]${bb};relation["leisure"="park"]${bb};);out body;>;out skel qt;`,
-  );
-  const parks = (osmtogeojson(parksRaw, { flatProperties: true }) as FeatureCollection).features
-    .filter(isArea)
-    .filter((f) => turf.booleanIntersects(f, boundary))
-    .filter((f) => turf.area(f) >= src.majorParks.minAreaHa * 1e4)
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
-    .map((f) => ({
-      type: "Feature" as const,
-      properties: { osm: String(f.id) },
-      geometry: roundGeometry(turf.simplify(f, { tolerance: 0.00002 }).geometry),
-    }));
-  writeJson(join(outDir, "parks-major.geojson"), { type: "FeatureCollection", features: parks });
-  report.push(`- Parques grandes (≥ ${src.majorParks.minAreaHa} ha): ${parks.length}`, "", "## Lugares", "");
+  report.push(`- Límite: \`${bRef}\`, ${(turf.area(boundary) / 1e6).toFixed(1)} km²`, "", "## Lugares", "");
 
   // Places ----------------------------------------------------------------
   const places: Place[] = [];
   for (const p of src.places) {
-    console.log(`Place ${p.id}`);
-    const lines: string[] = [`### ${p.name} (\`${p.id}\`)`];
+    try {
+      console.log(`Place ${p.id}`);
+      const lines: string[] = [`### ${p.name} (\`${p.id}\`)`];
 
-    const candidates = (await overpass(`${header()}(${p.select}${bb};);out tags center;`)).elements.sort(
-      (a, b) => rank[a.type] - rank[b.type] || a.id - b.id,
-    );
-    if (!candidates.length && !p.osm) {
-      lines.push("- ❌ Sin resultados para el selector; corregir `select` o fijar `osm`.", "");
+      const candidates = (await overpass(`${header()}(${p.select}${bb};);out tags center;`)).elements.sort(
+        (a, b) => rank[a.type] - rank[b.type] || a.id - b.id,
+      );
+      if (!candidates.length && !p.osm) {
+        lines.push("- ❌ Sin resultados para el selector; corregir `select` o fijar `osm`.", "");
+        report.push(...lines);
+        console.warn(`  ! no candidates for ${p.id}`);
+        continue;
+      }
+      const ref = p.osm ?? `${candidates[0].type}/${candidates[0].id}`;
+      if (candidates.length > 1 || !p.osm) {
+        lines.push(`- Candidatos: ${candidates.map((c) => `\`${c.type}/${c.id}\` ${c.tags?.name ?? ""}`).join(" · ")}`);
+      }
+      lines.push(`- Elemento usado: \`${ref}\`${p.osm ? " (fijado)" : " (automático: fijarlo con `osm` si es correcto)"}`);
+
+      const fc = await geometryOf(ref);
+      const main = fc.features.find((f) => f.id === ref) ?? fc.features[0];
+      let footprint: Feature<Polygon | MultiPolygon>;
+      if (isArea(main)) {
+        footprint = main as Feature<Polygon | MultiPolygon>;
+      } else if (main.geometry.type === "LineString" || main.geometry.type === "MultiLineString") {
+        const width = p.bridgeWidthM ?? 6;
+        footprint = turf.buffer(main, width / 2, { units: "meters" }) as Feature<Polygon>;
+        lines.push(`- Huella: línea con buffer de ${width} m`);
+      } else {
+        footprint = turf.circle(main.geometry.type === "Point" ? main.geometry.coordinates : turf.centroid(main).geometry.coordinates, 3, { units: "meters" });
+        lines.push("- Huella: nodo sin área (círculo de 3 m de radio)");
+      }
+
+      const centroid = turf.centerOfMass(footprint).geometry.coordinates as [number, number];
+      const eqDiameterM = Math.sqrt(turf.area(footprint));
+
+      // Facade orientation: entrance=main on the outline, else manual value.
+      const [type, id] = ref.split("/");
+      const wayScope = type === "relation" ? `way(r);` : type === "way" ? `way(${id});` : "";
+      const entrances = wayScope
+        ? (await overpass(`${header()}${type}(${id});${wayScope}node(w)["entrance"="main"];out body;`)).elements
+        : [];
+      let facadeBearing: number | null = null;
+      let bearingSource: Place["bearingSource"] = null;
+      if (entrances.length) {
+        const e = entrances.sort((a, b) => a.id - b.id)[0];
+        facadeBearing = (turf.bearing(centroid, [e.lon!, e.lat!]) + 360) % 360;
+        bearingSource = "calculado";
+        lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (centroide → \`node/${e.id}\` entrance=main${entrances.length > 1 ? `; hay ${entrances.length}, se usó el de menor id` : ""})`);
+      } else if (p.facadeBearing !== undefined) {
+        facadeBearing = p.facadeBearing;
+        bearingSource = "manual";
+        lines.push(`- Rumbo: ${facadeBearing}° manual ⚠️ revisar`);
+      } else if (p.symmetry !== "radial") {
+        lines.push("- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)");
+      }
+
+      const modifiers = {
+        size: eqDiameterM >= SCORING.minSizeDiameterM,
+        orientation: p.symmetry !== "radial" && facadeBearing !== null,
+      };
+      lines.push(
+        `- Diámetro equivalente: ${eqDiameterM.toFixed(1)} m · simetría ${p.symmetry}`,
+        `- Modificadores: tamaño ${modifiers.size ? "✔" : "✘ (excluido)"} · orientación ${modifiers.orientation ? "✔" : "✘ (excluido)"}`,
+        "",
+      );
       report.push(...lines);
-      console.warn(`  ! no candidates for ${p.id}`);
-      continue;
+
+      places.push({
+        id: p.id,
+        name: p.name,
+        osm: ref,
+        centroid: roundCoords(centroid),
+        footprint: { type: "Feature", properties: {}, geometry: roundGeometry(footprint.geometry) },
+        eqDiameterM: round(eqDiameterM, 1),
+        facadeBearing: facadeBearing === null ? null : round(facadeBearing, 1),
+        bearingSource,
+        symmetry: p.symmetry,
+        modifiers,
+      });
+    } catch (e) {
+      // One failing place must not abort the run: report it and continue.
+      console.warn(`  ! ${p.id} skipped: ${(e as Error).message.split("\n")[0]}`);
+      report.push(`### ${p.name} (\`${p.id}\`)`, "- ❌ Overpass no respondió; volver a correr `npm run data`.", "");
     }
-    const ref = p.osm ?? `${candidates[0].type}/${candidates[0].id}`;
-    if (candidates.length > 1 || !p.osm) {
-      lines.push(`- Candidatos: ${candidates.map((c) => `\`${c.type}/${c.id}\` ${c.tags?.name ?? ""}`).join(" · ")}`);
-    }
-    lines.push(`- Elemento usado: \`${ref}\`${p.osm ? " (fijado)" : " (automático: fijarlo con `osm` si es correcto)"}`);
-
-    const fc = await geometryOf(ref);
-    const main = fc.features.find((f) => f.id === ref) ?? fc.features[0];
-    let footprint: Feature<Polygon | MultiPolygon>;
-    if (isArea(main)) {
-      footprint = main as Feature<Polygon | MultiPolygon>;
-    } else if (main.geometry.type === "LineString" || main.geometry.type === "MultiLineString") {
-      const width = p.bridgeWidthM ?? 6;
-      footprint = turf.buffer(main, width / 2, { units: "meters" }) as Feature<Polygon>;
-      lines.push(`- Huella: línea con buffer de ${width} m`);
-    } else {
-      footprint = turf.circle(main.geometry.type === "Point" ? main.geometry.coordinates : turf.centroid(main).geometry.coordinates, 3, { units: "meters" });
-      lines.push("- Huella: nodo sin área (círculo de 3 m de radio)");
-    }
-
-    const centroid = turf.centerOfMass(footprint).geometry.coordinates as [number, number];
-    const eqDiameterM = Math.sqrt(turf.area(footprint));
-
-    // Facade orientation: entrance=main on the outline, else manual value.
-    const [type, id] = ref.split("/");
-    const wayScope = type === "relation" ? `way(r);` : type === "way" ? `way(${id});` : "";
-    const entrances = wayScope
-      ? (await overpass(`${header()}${type}(${id});${wayScope}node(w)["entrance"="main"];out body;`)).elements
-      : [];
-    let facadeBearing: number | null = null;
-    let bearingSource: Place["bearingSource"] = null;
-    if (entrances.length) {
-      const e = entrances.sort((a, b) => a.id - b.id)[0];
-      facadeBearing = (turf.bearing(centroid, [e.lon!, e.lat!]) + 360) % 360;
-      bearingSource = "calculado";
-      lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (centroide → \`node/${e.id}\` entrance=main${entrances.length > 1 ? `; hay ${entrances.length}, se usó el de menor id` : ""})`);
-    } else if (p.facadeBearing !== undefined) {
-      facadeBearing = p.facadeBearing;
-      bearingSource = "manual";
-      lines.push(`- Rumbo: ${facadeBearing}° manual ⚠️ revisar`);
-    } else if (p.symmetry !== "radial") {
-      lines.push("- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)");
-    }
-
-    const modifiers = {
-      size: eqDiameterM >= SCORING.minSizeDiameterM,
-      orientation: p.symmetry !== "radial" && facadeBearing !== null,
-    };
-    lines.push(
-      `- Diámetro equivalente: ${eqDiameterM.toFixed(1)} m · simetría ${p.symmetry}`,
-      `- Modificadores: tamaño ${modifiers.size ? "✔" : "✘ (excluido)"} · orientación ${modifiers.orientation ? "✔" : "✘ (excluido)"}`,
-      "",
-    );
-    report.push(...lines);
-
-    places.push({
-      id: p.id,
-      name: p.name,
-      osm: ref,
-      centroid: roundCoords(centroid),
-      footprint: { type: "Feature", properties: {}, geometry: roundGeometry(footprint.geometry) },
-      eqDiameterM: round(eqDiameterM, 1),
-      facadeBearing: facadeBearing === null ? null : round(facadeBearing, 1),
-      bearingSource,
-      symmetry: p.symmetry,
-      modifiers,
-    });
   }
 
   const file: PlacesFile = { city: src.city, generatedAt: "from-osm", places };
   writeJson(join(outDir, "places.json"), file);
+  console.log(`\n${places.length}/${src.places.length} places written.`);
+
+  report.push("## Capas auxiliares", "");
+  // Major parks (medium level) -------------------------------------------
+  await (async () => {
+    console.log("Major parks");
+    // Non-fatal: this is the heaviest query; the medium level just lacks big parks if it fails.
+    let parksRaw: { elements: OsmElement[] };
+    try {
+      parksRaw = await overpass(`${header(300)}(way["leisure"="park"]${bb};relation["leisure"="park"]${bb};);out geom;`);
+    } catch (e) {
+      console.warn(`  ! major parks skipped: ${(e as Error).message.split("\n")[0]}`);
+      report.push("- ⚠️ Parques grandes: Overpass no respondió; volver a correr `npm run data`.");
+      return;
+    }
+    const parks = (osmtogeojson(parksRaw, { flatProperties: true }) as FeatureCollection).features
+      .filter(isArea)
+      .filter((f) => turf.booleanIntersects(f, boundary))
+      .filter((f) => turf.area(f) >= src.majorParks.minAreaHa * 1e4)
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+      .map((f) => ({
+        type: "Feature" as const,
+        properties: { osm: String(f.id) },
+        geometry: roundGeometry(turf.simplify(f, { tolerance: 0.00002 }).geometry),
+      }));
+    writeJson(join(outDir, "parks-major.geojson"), { type: "FeatureCollection", features: parks });
+    report.push(`- Parques grandes (≥ ${src.majorParks.minAreaHa} ha): ${parks.length}`);
+  })();
   writeFileSync(join(ROOT, `scripts/reports/${src.city}.md`), report.join("\n") + "\n");
-  console.log(`\n${places.length}/${src.places.length} places written. Review scripts/reports/${src.city}.md`);
+  console.log(`Review scripts/reports/${src.city}.md`);
 }
 
 mkdirSync(join(ROOT, "scripts/reports"), { recursive: true });
