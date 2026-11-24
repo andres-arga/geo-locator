@@ -37,6 +37,8 @@ interface PlaceSource {
   osm?: string;
   symmetry: Symmetry;
   facadeBearing?: number;
+  /** Pin which entrance=main node defines the facade, e.g. "node/123". */
+  entrance?: string;
   bridgeWidthM?: number;
 }
 interface CitySource {
@@ -113,6 +115,36 @@ function roundCoords<T>(value: T): T {
 
 function roundGeometry<G extends Geometry>(g: G): G {
   return { ...g, coordinates: roundCoords((g as { coordinates: unknown }).coordinates) } as G;
+}
+
+/**
+ * Facade direction at an entrance: the outward normal of the footprint edge the
+ * entrance node lies on. Falls back to centroid -> entrance when the node is not on
+ * the outline (more than 3 m away from every edge).
+ */
+function facadeBearingAt(
+  footprint: Feature<Polygon | MultiPolygon>,
+  entrance: [number, number],
+  centroid: [number, number],
+): { bearing: number; method: "normal" | "centroid" } {
+  const toward = turf.bearing(centroid, entrance);
+  const polys = footprint.geometry.type === "Polygon" ? [footprint.geometry.coordinates] : footprint.geometry.coordinates;
+  let best: { d: number; a: number[]; b: number[] } | null = null;
+  for (const poly of polys) {
+    for (const ring of poly) {
+      for (let i = 0; i < ring.length - 1; i++) {
+        const d = turf.pointToLineDistance(entrance, turf.lineString([ring[i], ring[i + 1]]), { units: "meters" });
+        if (!best || d < best.d) best = { d, a: ring[i], b: ring[i + 1] };
+      }
+    }
+  }
+  const norm = (x: number) => ((x % 360) + 360) % 360;
+  if (!best || best.d > 3) return { bearing: norm(toward), method: "centroid" };
+  const edge = turf.bearing(best.a, best.b);
+  const diff = (x: number) => Math.abs(((x - toward + 540) % 360) - 180);
+  const n1 = edge + 90;
+  const n2 = edge - 90;
+  return { bearing: norm(diff(n1) <= diff(n2) ? n1 : n2), method: "normal" };
 }
 
 const isArea = (f: Feature) => f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon";
@@ -192,10 +224,20 @@ async function main() {
       let facadeBearing: number | null = null;
       let bearingSource: Place["bearingSource"] = null;
       if (entrances.length) {
-        const e = entrances.sort((a, b) => a.id - b.id)[0];
-        facadeBearing = (turf.bearing(centroid, [e.lon!, e.lat!]) + 360) % 360;
+        entrances.sort((a, b) => a.id - b.id);
+        const pinned = p.entrance ? entrances.find((e) => `node/${e.id}` === p.entrance) : undefined;
+        if (p.entrance && !pinned) throw new Error(`${p.id}: pinned entrance ${p.entrance} is not an entrance=main of ${ref}`);
+        const e = pinned ?? entrances[0];
+        const r = facadeBearingAt(footprint, [e.lon!, e.lat!], centroid);
+        facadeBearing = r.bearing;
         bearingSource = "calculado";
-        lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (centroide → \`node/${e.id}\` entrance=main${entrances.length > 1 ? `; hay ${entrances.length}, se usó el de menor id` : ""})`);
+        const how = r.method === "normal" ? "normal a la pared de" : "centroide →";
+        const which = pinned
+          ? " (fijado)"
+          : entrances.length > 1
+            ? `; hay ${entrances.length} (${entrances.map((x) => `node/${x.id}`).join(", ")}): se usó el de menor id, fijar con \`entrance\``
+            : "";
+        lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (${how} \`node/${e.id}\` entrance=main${which})`);
       } else if (p.facadeBearing !== undefined) {
         facadeBearing = p.facadeBearing;
         bearingSource = "manual";
