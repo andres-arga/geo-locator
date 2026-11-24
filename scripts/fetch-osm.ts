@@ -70,7 +70,7 @@ async function overpass(query: string): Promise<{ elements: OsmElement[] }> {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "geo-locator-data-script" },
           body: new URLSearchParams({ data: query }),
-          signal: AbortSignal.timeout(180_000),
+          signal: AbortSignal.timeout(Number(process.env.OVERPASS_TIMEOUT_MS ?? 90_000)),
         });
         if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
         const json = await res.json();
