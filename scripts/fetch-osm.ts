@@ -39,6 +39,10 @@ interface PlaceSource {
   facadeBearing?: number;
   /** Pin which entrance=main node defines the facade, e.g. "node/123". */
   entrance?: string;
+  /** Approximate manual facade direction; snapped to the nearest wall of the footprint rectangle. */
+  facadeHint?: number;
+  /** Merge the geometry of every way candidate (places split into several ways, e.g. bridges). */
+  mergeCandidates?: boolean;
   bridgeWidthM?: number;
 }
 interface CitySource {
@@ -147,6 +151,34 @@ function facadeBearingAt(
   return { bearing: norm(diff(n1) <= diff(n2) ? n1 : n2), method: "normal" };
 }
 
+/**
+ * Minimum-area enclosing rectangle of the footprint (brute force over the convex
+ * hull in a local metric plane). Returns the compass bearing of one side's outward
+ * normal (the other three are +90°, +180°, +270°) and the bearing of the long axis.
+ */
+function footprintRectangle(footprint: Feature<Polygon | MultiPolygon>): { normal: number; longAxis: number } {
+  const hull = turf.convex(footprint)!;
+  const [lon0, lat0] = turf.centroid(footprint).geometry.coordinates;
+  const kx = 111320 * Math.cos((lat0 * Math.PI) / 180);
+  const pts = hull.geometry.coordinates[0].map(([x, y]) => [(x - lon0) * kx, (y - lat0) * 110540]);
+  let best = { area: Infinity, deg: 0, w: 0, h: 0 };
+  for (let deg = 0; deg < 90; deg += 0.25) {
+    const t = (deg * Math.PI) / 180;
+    const c = Math.cos(t), s = Math.sin(t);
+    let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+    for (const [x, y] of pts) {
+      const u = x * c + y * s, v = -x * s + y * c;
+      minU = Math.min(minU, u); maxU = Math.max(maxU, u); minV = Math.min(minV, v); maxV = Math.max(maxV, v);
+    }
+    const area = (maxU - minU) * (maxV - minV);
+    if (area < best.area) best = { area, deg, w: maxU - minU, h: maxV - minV };
+  }
+  // Side directions as math angles (from +x, counter-clockwise): deg and deg + 90.
+  const toBearing = (math: number) => (((90 - math) % 360) + 360) % 360;
+  const longMath = best.w >= best.h ? best.deg : best.deg + 90;
+  return { normal: toBearing(best.deg) % 90, longAxis: toBearing(longMath) % 180 };
+}
+
 const isArea = (f: Feature) => f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon";
 const rank = { relation: 0, way: 1, node: 2 } as const;
 
@@ -198,8 +230,23 @@ async function main() {
       }
       lines.push(`- Elemento usado: \`${ref}\`${p.osm ? " (fijado)" : " (automático: fijarlo con `osm` si es correcto)"}`);
 
-      const fc = await geometryOf(ref);
-      const main = fc.features.find((f) => f.id === ref) ?? fc.features[0];
+      let main: Feature;
+      if (p.mergeCandidates) {
+        const ways = candidates.filter((c) => c.type === "way").map((c) => `way/${c.id}`);
+        const parts: Feature[] = [];
+        for (const w of ways) {
+          const g = await geometryOf(w);
+          parts.push(g.features.find((f) => f.id === w) ?? g.features[0]);
+        }
+        const coords = parts.flatMap((f) =>
+          f.geometry.type === "LineString" ? [f.geometry.coordinates] : f.geometry.type === "MultiLineString" ? f.geometry.coordinates : [],
+        );
+        main = turf.multiLineString(coords);
+        lines.push(`- Geometría unida de ${ways.length} vías: ${ways.map((w) => `\`${w}\``).join(", ")}`);
+      } else {
+        const fc = await geometryOf(ref);
+        main = fc.features.find((f) => f.id === ref) ?? fc.features[0];
+      }
       let footprint: Feature<Polygon | MultiPolygon>;
       if (isArea(main)) {
         footprint = main as Feature<Polygon | MultiPolygon>;
@@ -238,6 +285,20 @@ async function main() {
             ? `; hay ${entrances.length} (${entrances.map((x) => `node/${x.id}`).join(", ")}): se usó el de menor id, fijar con \`entrance\``
             : "";
         lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (${how} \`node/${e.id}\` entrance=main${which})`);
+      } else if (p.facadeHint !== undefined) {
+        const { normal } = footprintRectangle(footprint);
+        const options = [0, 90, 180, 270].map((k) => (normal + k) % 360);
+        const diff = (x: number) => Math.abs(((x - p.facadeHint! + 540) % 360) - 180);
+        facadeBearing = options.reduce((a, b) => (diff(b) < diff(a) ? b : a));
+        bearingSource = "manual";
+        lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° manual ⚠️ revisar (pista ${p.facadeHint}° ajustada a la pared más cercana)`);
+      } else if (p.symmetry === 2 || p.symmetry === 4) {
+        const rect = footprintRectangle(footprint);
+        facadeBearing = p.symmetry === 4 ? rect.normal : rect.longAxis;
+        bearingSource = "calculado";
+        lines.push(
+          `- Rumbo: ${facadeBearing.toFixed(0)}° calculado (${p.symmetry === 4 ? "lados" : "eje largo"} del rectángulo mínimo; simetría ${p.symmetry})`,
+        );
       } else if (p.facadeBearing !== undefined) {
         facadeBearing = p.facadeBearing;
         bearingSource = "manual";
