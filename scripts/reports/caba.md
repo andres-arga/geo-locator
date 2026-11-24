@@ -14,16 +14,28 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Modificadores: tamaño ✘ (excluido) · orientación ✘ (excluido)
 
 ### Casa Rosada (`casa-rosada`)
-- ❌ Overpass no respondió; volver a correr `npm run data`.
+- Candidatos: `way/185738988` Casa Rosada
+- Elemento usado: `way/185738988` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)
+- Diámetro equivalente: 90.5 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✘ (excluido)
 
 ### Congreso de la Nación (`congreso`)
-- ❌ Sin resultados para el selector; corregir `select` o fijar `osm`.
+- ❌ Overpass no respondió; volver a correr `npm run data`.
 
 ### Teatro Colón (`teatro-colon`)
-- ❌ Overpass no respondió; volver a correr `npm run data`.
+- Candidatos: `way/23633911` Teatro Colón · `way/114037319` Teatro Colón · `node/2620563335` Teatro Colón · `node/2624337390` Teatro Colón · `node/2624337391` Teatro Colón · `node/2624337392` Teatro Colón · `node/3445934956` Teatro Colón · `node/3445934957` Teatro Colón · `node/3445934958` Teatro Colón · `node/3445934959` Teatro Colón
+- Elemento usado: `way/23633911` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 86° calculado (centroide → `node/4293917812` entrance=main; hay 2, se usó el de menor id)
+- Diámetro equivalente: 77.5 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✔
 
 ### Cementerio de la Recoleta (`recoleta`)
-- ❌ Overpass no respondió; volver a correr `npm run data`.
+- Candidatos: `way/183842128` Cementerio de la Recoleta · `node/4600273575` 166 - Cementerio de Recoleta
+- Elemento usado: `way/183842128` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 89° calculado (centroide → `node/668306499` entrance=main)
+- Diámetro equivalente: 233.7 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✔
 
 ### Planetario Galileo Galilei (`planetario`)
 - Candidatos: `way/1224777740` Planetario Galileo Galilei
@@ -48,7 +60,11 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Modificadores: tamaño ✘ (excluido) · orientación ✘ (excluido)
 
 ### Estadio Monumental (`monumental`)
-- ❌ Overpass no respondió; volver a correr `npm run data`.
+- Candidatos: `relation/1646999` Estadio Monumental · `way/29066499` Estadio Monumental de Villa Lynch
+- Elemento usado: `relation/1646999` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)
+- Diámetro equivalente: 207.4 m · simetría 2
+- Modificadores: tamaño ✔ · orientación ✘ (excluido)
 
 ### Palacio Barolo (`barolo`)
 - Candidatos: `way/1386044833` Palacio Barolo
@@ -58,7 +74,7 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Modificadores: tamaño ✔ · orientación ✘ (excluido)
 
 ### Torre Monumental (`torre-monumental`)
-- ❌ Overpass no respondió; volver a correr `npm run data`.
+- ❌ Sin resultados para el selector; corregir `select` o fijar `osm`.
 
 ## Capas auxiliares
 
