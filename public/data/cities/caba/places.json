@@ -42,12 +42,12 @@
     }
    },
    "eqDiameterM": 7.1,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 89.5,
+   "bearingSource": "calculado",
    "symmetry": 4,
    "modifiers": {
     "size": false,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -146,12 +146,12 @@
     }
    },
    "eqDiameterM": 90.5,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 268,
+   "bearingSource": "manual",
    "symmetry": 1,
    "modifiers": {
     "size": true,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -446,12 +446,12 @@
     }
    },
    "eqDiameterM": 91.7,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 85.3,
+   "bearingSource": "manual",
    "symmetry": 1,
    "modifiers": {
     "size": true,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -974,12 +974,12 @@
     }
    },
    "eqDiameterM": 145.5,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 333.3,
+   "bearingSource": "manual",
    "symmetry": 1,
    "modifiers": {
     "size": true,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -987,8 +987,8 @@
    "name": "Puente de la Mujer",
    "osm": "way/23648273",
    "centroid": [
-    -58.364218,
-    -34.607943
+    -58.36512,
+    -34.608016
    ],
    "footprint": {
     "type": "Feature",
@@ -998,67 +998,91 @@
      "coordinates": [
       [
        [
-        -58.364248,
-        -34.607917
+        -58.36605,
+        -34.608061
        ],
        [
-        -58.364254,
-        -34.607919
+        -58.366057,
+        -34.608062
        ],
        [
-        -58.36426,
-        -34.607921
+        -58.366063,
+        -34.608064
        ],
        [
-        -58.364266,
-        -34.607924
+        -58.366069,
+        -34.608067
        ],
        [
-        -58.36427,
-        -34.607928
+        -58.366073,
+        -34.608071
        ],
        [
-        -58.364274,
-        -34.607932
+        -58.366077,
+        -34.608075
        ],
        [
-        -58.364277,
-        -34.607937
+        -58.36608,
+        -34.60808
        ],
        [
-        -58.364278,
-        -34.607943
+        -58.366082,
+        -34.608086
        ],
        [
-        -58.364278,
-        -34.607948
+        -58.366082,
+        -34.608091
        ],
        [
-        -58.364276,
-        -34.607954
+        -58.366081,
+        -34.608096
        ],
        [
-        -58.364274,
-        -34.607959
+        -58.366078,
+        -34.608102
        ],
        [
-        -58.36427,
-        -34.607963
+        -58.366075,
+        -34.608106
        ],
        [
-        -58.364265,
-        -34.607967
+        -58.36607,
+        -34.60811
        ],
        [
-        -58.36426,
-        -34.60797
+        -58.366065,
+        -34.608113
        ],
        [
-        -58.364253,
-        -34.607972
+        -58.366059,
+        -34.608116
        ],
        [
-        -58.364247,
+        -58.366052,
+        -34.608117
+       ],
+       [
+        -58.366046,
+        -34.608117
+       ],
+       [
+        -58.366012,
+        -34.608115
+       ],
+       [
+        -58.366011,
+        -34.608115
+       ],
+       [
+        -58.366011,
+        -34.608115
+       ],
+       [
+        -58.364241,
+        -34.607973
+       ],
+       [
+        -58.364241,
         -34.607973
        ],
        [
@@ -1134,20 +1158,28 @@
         -34.607913
        ],
        [
-        -58.364248,
+        -58.364247,
         -34.607917
+       ],
+       [
+        -58.366017,
+        -34.60806
+       ],
+       [
+        -58.36605,
+        -34.608061
        ]
       ]
      ]
     }
    },
-   "eqDiameterM": 7.7,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "eqDiameterM": 33,
+   "facadeBearing": 84.5,
+   "bearingSource": "calculado",
    "symmetry": 2,
    "modifiers": {
-    "size": false,
-    "orientation": false
+    "size": true,
+    "orientation": true
    }
   },
   {
@@ -1750,12 +1782,12 @@
     }
    },
    "eqDiameterM": 207.4,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 10.5,
+   "bearingSource": "calculado",
    "symmetry": 2,
    "modifiers": {
     "size": true,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -1798,12 +1830,12 @@
     }
    },
    "eqDiameterM": 50.4,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 355,
+   "bearingSource": "manual",
    "symmetry": 1,
    "modifiers": {
     "size": true,
-    "orientation": false
+    "orientation": true
    }
   },
   {
@@ -1850,12 +1882,12 @@
     }
    },
    "eqDiameterM": 9.2,
-   "facadeBearing": null,
-   "bearingSource": null,
+   "facadeBearing": 33.3,
+   "bearingSource": "calculado",
    "symmetry": 4,
    "modifiers": {
     "size": false,
-    "orientation": false
+    "orientation": true
    }
   }
  ]
