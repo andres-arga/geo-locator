@@ -123,8 +123,8 @@ Generado por `npm run data`. Revisar los valores marcados.
 ### Movistar Arena (`movistar-arena`)
 - Candidatos: `way/702175944` Movistar Arena
 - Elemento usado: `way/702175944` (automático: fijarlo con `osm` si es correcto)
-- Rumbo: 48° calculado (lados del rectángulo mínimo; simetría 4)
-- Diámetro equivalente: 91.5 m · simetría 4
+- Rumbo: 135° manual ⚠️ revisar (pista 135° ajustada a la pared real más cercana, de 27 m)
+- Diámetro equivalente: 91.5 m · simetría 1
 - Modificadores: tamaño ✔ · orientación ✔
 
 ### Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo) (`gasometro`)

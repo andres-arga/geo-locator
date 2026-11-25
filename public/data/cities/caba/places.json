@@ -2392,9 +2392,9 @@
     }
    },
    "eqDiameterM": 91.5,
-   "facadeBearing": 48,
-   "bearingSource": "calculado",
-   "symmetry": 4,
+   "facadeBearing": 135.3,
+   "bearingSource": "manual",
+   "symmetry": 1,
    "modifiers": {
     "size": true,
     "orientation": true
