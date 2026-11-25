@@ -83,7 +83,7 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Diámetro equivalente: 50.4 m · simetría 1
 - Modificadores: tamaño ✔ · orientación ✔
 
-### Torre Monumental (`torre-monumental`)
+### Torre Monumental (ex Torre de los Ingleses) (`torre-monumental`)
 - Candidatos: `way/52563680` Torre de los Ingleses
 - Elemento usado: `way/52563680` (automático: fijarlo con `osm` si es correcto)
 - Rumbo: 33° calculado (lados del rectángulo mínimo; simetría 4)

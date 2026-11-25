@@ -16,6 +16,6 @@
     { "id": "floralis", "name": "Floralis Genérica", "select": "nwr[\"name\"~\"Floralis\"]", "symmetry": "radial" },
     { "id": "monumental", "name": "Estadio Monumental", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2 },
     { "id": "barolo", "name": "Palacio Barolo", "select": "nwr[\"name\"=\"Palacio Barolo\"]", "symmetry": 1, "facadeHint": 0 },
-    { "id": "torre-monumental", "name": "Torre Monumental", "select": "nwr[\"name\"~\"Torre Monumental|Torre de los Ingleses\"]", "symmetry": 4 }
+    { "id": "torre-monumental", "name": "Torre Monumental (ex Torre de los Ingleses)", "select": "nwr[\"name\"~\"Torre Monumental|Torre de los Ingleses\"]", "symmetry": 4 }
   ]
 }
