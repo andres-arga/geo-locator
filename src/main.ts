@@ -1,65 +1,51 @@
 import "./styles.css";
 import { CITIES, DEFAULT_CITY } from "./cities";
 import type { PlacesFile } from "./cities/placeTypes";
-import { MAP_LEVELS, type MapLevel } from "./config/game";
-import type { GameOptions } from "./game/scoring";
 import { createMap } from "./map/createMap";
 import { applyLevel } from "./map/levels";
 import { addResultLayers } from "./map/overlays";
 import { GameController } from "./ui/game";
+import { createMenu, type Settings } from "./ui/menu";
 
 const app = document.getElementById("app")!;
 const city = CITIES[DEFAULT_CITY];
 const baseUrl = new URL(import.meta.env.BASE_URL, location.href).href;
 
 app.innerHTML = `<div class="layout">
-  <div class="map-area"><div class="map" id="map"></div><div class="dev-toolbar" id="dev"></div></div>
-  <aside class="panel" id="panel" aria-live="polite"></aside>
+  <div class="map-area"><div class="map" id="map"></div></div>
+  <aside class="panel">
+    <div class="panel-game" id="game" aria-live="polite"></div>
+    <footer class="panel-foot"><button class="btn menu-btn" id="menu-btn" aria-haspopup="dialog">☰ Menú</button></footer>
+  </aside>
 </div>`;
 const mapEl = document.getElementById("map")!;
-const panel = document.getElementById("panel")!;
-const dev = document.getElementById("dev")!;
+const gameEl = document.getElementById("game")!;
 
 const { map, loaded } = createMap(mapEl, city, baseUrl);
 
-// Temporary until the options screen (phase 7): level switcher that restarts the game.
-const options: GameOptions = { level: "easy", size: false, orientation: false };
-let streetNames = false;
+// Default: the simplest mode (location only, easy map, modifiers off).
+let settings: Settings = { level: "easy", size: false, orientation: false, streetNames: false };
 let game: GameController | null = null;
 let places: PlacesFile["places"] = [];
 
-function renderDev() {
-  dev.innerHTML = "";
-  for (const [id, { label }] of Object.entries(MAP_LEVELS) as [MapLevel, { label: string }][]) {
-    const b = document.createElement("button");
-    b.textContent = label;
-    b.setAttribute("aria-pressed", String(options.level === id));
-    b.onclick = () => { options.level = id; renderDev(); applyLevel(map, { level: id, streetNames }); start(); };
-    dev.appendChild(b);
-  }
-  const lbl = document.createElement("label");
-  lbl.innerHTML = `<input type="checkbox" ${streetNames ? "checked" : ""} ${options.level !== "easy" ? "disabled" : ""}> Nombres`;
-  lbl.querySelector("input")!.onchange = (e) => {
-    streetNames = (e.target as HTMLInputElement).checked;
-    applyLevel(map, { level: options.level, streetNames });
-  };
-  dev.appendChild(lbl);
-  const size = document.createElement("label");
-  size.innerHTML = `<input type="checkbox" ${options.size ? "checked" : ""}> Tamaño`;
-  size.querySelector("input")!.onchange = (e) => {
-    options.size = (e.target as HTMLInputElement).checked;
-    start();
-  };
-  dev.appendChild(size);
-}
-
 function start() {
   game?.destroy();
-  map.easeTo({ center: city.center, zoom: city.zoom, duration: 0 });
-  game = new GameController(map, mapEl, panel, city, places, { ...options });
+  map.jumpTo({ center: city.center, zoom: city.zoom });
+  const { level, size, orientation } = settings;
+  game = new GameController(map, mapEl, gameEl, city, places, { level, size, orientation });
 }
 
-panel.addEventListener("game:restart", start);
+const menu = createMenu({
+  current: () => settings,
+  orientationAvailable: false, // phase 5
+  onApply: (s) => {
+    settings = s;
+    applyLevel(map, { level: s.level, streetNames: s.streetNames });
+    start();
+  },
+});
+document.getElementById("menu-btn")!.addEventListener("click", () => menu.open());
+gameEl.addEventListener("game:restart", start);
 
 (async () => {
   const [data] = await Promise.all([
@@ -68,11 +54,10 @@ panel.addEventListener("game:restart", start);
   ]);
   places = data.places;
   addResultLayers(map);
-  applyLevel(map, { level: options.level, streetNames });
-  renderDev();
+  applyLevel(map, { level: settings.level, streetNames: settings.streetNames });
   start();
 })().catch((e) => {
-  panel.innerHTML = `<p class="error">No se pudieron cargar los datos: ${(e as Error).message}</p>`;
+  gameEl.innerHTML = `<p class="error">No se pudieron cargar los datos: ${(e as Error).message}</p>`;
 });
 
 // Exposed for automated checks (Playwright).
