@@ -2,11 +2,13 @@ import type { Feature, MultiPolygon, Polygon } from "geojson";
 
 export type Symmetry = 1 | 2 | 4 | "radial";
 export type BearingSource = "calculado" | "manual";
+export type PlaceCategory = "landmark" | "stadium";
 
 /** One landmark as produced by scripts/fetch-osm.ts (public/data/cities/<city>/places.json). */
 export interface Place {
   id: string;
   name: string;
+  category: PlaceCategory;
   /** OSM element the data comes from, e.g. "way/123". */
   osm: string;
   /** Center of mass of the footprint, [lng, lat]. */

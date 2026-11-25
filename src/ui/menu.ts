@@ -1,16 +1,28 @@
 import { MAP_LEVELS, ROUNDS_PER_GAME, type MapLevel } from "../config/game";
 import { maxPointsPerGame, type GameOptions } from "../game/scoring";
+import type { PlaceSet } from "../game/state";
 import { formatPoints } from "./format";
 
 /** Everything the menu controls. Street names only matter on the easy level. */
 export interface Settings extends GameOptions {
   streetNames: boolean;
+  placeSet: PlaceSet;
 }
 
-export const DEFAULT_SETTINGS: Settings = { level: "easy", size: false, orientation: false, streetNames: false };
+export const DEFAULT_SETTINGS: Settings = { level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all" };
 
 export function sameSettings(a: Settings, b: Settings): boolean {
-  return a.level === b.level && a.size === b.size && a.orientation === b.orientation && a.streetNames === b.streetNames;
+  return (
+    a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
+    a.streetNames === b.streetNames && a.placeSet === b.placeSet
+  );
+}
+
+/** Number of places available per set (known once the data is loaded). */
+export type PlaceCounts = Record<PlaceSet, number> | null;
+
+export function roundsFor(s: Settings, counts: PlaceCounts): number {
+  return counts ? Math.min(ROUNDS_PER_GAME, counts[s.placeSet]) : ROUNDS_PER_GAME;
 }
 
 // ------------------------------------------------------------------ storage
@@ -22,7 +34,8 @@ export function loadSettings(): Settings {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
     if (raw && raw.level in MAP_LEVELS) {
-      return { level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames };
+      const placeSet: PlaceSet = ["all", "stadiums", "landmarks"].includes(raw.placeSet) ? raw.placeSet : "all";
+      return { level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
     }
   } catch {
     /* storage unavailable or corrupt: use defaults */
@@ -50,14 +63,24 @@ const LEVEL_HELP: Record<MapLevel, string> = {
  * The options form (level, street names, modifiers, max score). Shared by the
  * start screen and the in-game menu. Calls onChange with every edit.
  */
-export function mountSettingsForm(root: HTMLElement, initial: Settings, onChange: (s: Settings) => void) {
+const SETS: { id: PlaceSet; label: string; help: string }[] = [
+  { id: "all", label: "Todos los lugares", help: "Edificios, monumentos y estadios." },
+  { id: "stadiums", label: "Modo Fútbol", help: "Solo estadios." },
+  { id: "landmarks", label: "Lugares icónicos", help: "Todo menos los estadios." },
+];
+
+export function mountSettingsForm(root: HTMLElement, initial: Settings, counts: PlaceCounts, onChange: (s: Settings) => void) {
   let draft = { ...initial };
   const render = (focusName?: string, focusValue?: string) => {
     const levels = (Object.entries(MAP_LEVELS) as [MapLevel, { label: string; multiplier: number }][])
       .map(([id, l]) => `<label class="choice"><input type="radio" name="level" value="${id}" ${draft.level === id ? "checked" : ""}>
           <span><strong>${l.label}</strong> <span class="muted">×${l.multiplier}</span><br><span class="muted">${LEVEL_HELP[id]}</span></span></label>`)
       .join("");
+    const sets = SETS.map((o) => `<label class="choice"><input type="radio" name="placeSet" value="${o.id}" ${draft.placeSet === o.id ? "checked" : ""}>
+          <span><strong>${o.label}</strong>${counts ? ` <span class="muted">(${counts[o.id]})</span>` : ""}<br><span class="muted">${o.help}</span></span></label>`).join("");
+    const rounds = roundsFor(draft, counts);
     root.innerHTML = `
+      <fieldset><legend>Lugares</legend>${sets}</fieldset>
       <fieldset><legend>Dificultad del mapa</legend>${levels}
         <label class="toggle ${draft.level !== "easy" ? "disabled" : ""}"><input type="checkbox" name="streetNames" ${draft.streetNames ? "checked" : ""} ${draft.level !== "easy" ? "disabled" : ""}>
           Mostrar nombres de calles <span class="muted">(solo en Fácil)</span></label>
@@ -66,11 +89,12 @@ export function mountSettingsForm(root: HTMLElement, initial: Settings, onChange
         <label class="toggle"><input type="checkbox" name="size" ${draft.size ? "checked" : ""}> Acertar tamaño <span class="muted">+400 pts por lugar</span></label>
         <label class="toggle"><input type="checkbox" name="orientation" ${draft.orientation ? "checked" : ""}> Acertar orientación <span class="muted">+400 pts por lugar</span></label>
       </fieldset>
-      <p class="menu-max">Puntaje máximo: <strong>${formatPoints(maxPointsPerGame(draft))}</strong> pts
-        <span class="muted">(${ROUNDS_PER_GAME} lugares)</span></p>`;
+      <p class="menu-max">Puntaje máximo: <strong>${formatPoints(maxPointsPerGame(draft, rounds))}</strong> pts
+        <span class="muted">(${rounds} lugares por partida)</span></p>`;
     root.querySelectorAll<HTMLInputElement>("input").forEach((input) =>
       input.addEventListener("change", () => {
         if (input.name === "level") draft = { ...draft, level: input.value as MapLevel };
+        else if (input.name === "placeSet") draft = { ...draft, placeSet: input.value as PlaceSet };
         else draft = { ...draft, [input.name]: input.checked };
         render(input.name, input.type === "radio" ? input.value : undefined);
         onChange({ ...draft });
@@ -87,6 +111,7 @@ export function mountSettingsForm(root: HTMLElement, initial: Settings, onChange
 
 export interface MenuOptions {
   current: () => Settings;
+  counts: () => PlaceCounts;
   /** Called only after the player confirms "Aplicar y reiniciar juego". */
   onApply: (s: Settings) => void;
   /** "Volver al inicio" link. */
@@ -134,7 +159,7 @@ export function createMenu(o: MenuOptions): { open: () => void } {
           <div class="settings"></div>
           <footer class="menu-actions"></footer>
         </form>`;
-      mountSettingsForm(dlg.querySelector(".settings")!, draft, (s) => {
+      mountSettingsForm(dlg.querySelector(".settings")!, draft, o.counts(), (s) => {
         draft = s;
         renderActions();
       });

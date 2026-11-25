@@ -1,10 +1,10 @@
-import { mountSettingsForm, type Settings } from "./menu";
+import { mountSettingsForm, type PlaceCounts, type Settings } from "./menu";
 
 export interface StartScreen {
   show: (current: Settings) => void;
   hide: () => void;
-  /** Enable "Empezar" once the map and the data are loaded. */
-  setReady: (ready: boolean) => void;
+  /** Enable "Empezar" once the map and the data are loaded (counts per place set). */
+  setReady: (counts: PlaceCounts) => void;
 }
 
 /** Welcome screen over the (blurred) map: what the game is, first options, start. */
@@ -16,7 +16,7 @@ export function createStartScreen(parent: HTMLElement, cityName: string, onStart
   el.setAttribute("aria-labelledby", "start-title");
   parent.appendChild(el);
   let draft: Settings;
-  let ready = false;
+  let counts: PlaceCounts = null;
 
   const button = () => el.querySelector<HTMLButtonElement>("[data-start]")!;
 
@@ -35,25 +35,29 @@ export function createStartScreen(parent: HTMLElement, cityName: string, onStart
             <li><span aria-hidden="true">🏆</span><span>Cuanto más cerca, más puntos. Los mapas más vacíos multiplican el puntaje.</span></li>
           </ul>
           <div class="settings"></div>
-          <button class="btn primary start-btn" data-start ${ready ? "" : "disabled"}>${ready ? "Empezar" : "Cargando mapa…"}</button>
+          <button class="btn primary start-btn" data-start ${counts ? "" : "disabled"}>${counts ? "Empezar" : "Cargando mapa…"}</button>
         </div>`;
-      mountSettingsForm(el.querySelector(".settings")!, draft, (s) => (draft = s));
+      mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s));
       button().addEventListener("click", () => onStart({ ...draft }));
       el.hidden = false;
       document.body.classList.add("on-start");
-      if (ready) button().focus();
+      if (counts) button().focus();
     },
     hide() {
       el.hidden = true;
       document.body.classList.remove("on-start");
     },
-    setReady(r) {
-      ready = r;
+    setReady(c) {
+      counts = c;
+      // Re-render the form with the counts, keeping the current draft.
+      if (!el.hidden && el.querySelector(".settings")) {
+        mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s));
+      }
       const b = el.querySelector<HTMLButtonElement>("[data-start]");
       if (!b) return;
-      b.disabled = !r;
-      b.textContent = r ? "Empezar" : "Cargando mapa…";
-      if (r && !el.hidden) b.focus();
+      b.disabled = !counts;
+      b.textContent = counts ? "Empezar" : "Cargando mapa…";
+      if (counts && !el.hidden) b.focus();
     },
   };
 }

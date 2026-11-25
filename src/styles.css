@@ -232,3 +232,15 @@ dialog.menu::backdrop { background: rgba(30, 25, 45, .45); }
 .home-link { margin-right: auto; }
 /* Keep the sidebar quiet while the welcome screen is up. */
 body.on-start .panel { visibility: hidden; }
+
+/* ---------- Final summary ---------- */
+.summary-list { list-style: none; margin: 0; padding: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.summary-list li { padding: 7px 6px; border-bottom: 1px solid #f1ede4; cursor: pointer; border-radius: 6px; }
+.summary-list li:hover, .summary-list li:focus-visible { background: #f6f2ff; outline: none; }
+.summary-list li.selected { background: #ece6ff; }
+.row-top { display: flex; gap: 6px; align-items: baseline; }
+.row-top .num { color: #fff; background: #1e8a4c; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: inline-grid; place-items: center; flex: none; }
+.row-top .name { flex: 1; }
+.row-detail { color: #6b6455; font-size: 12px; margin: 2px 0 0 24px; }
+.summary-actions { display: flex; gap: 8px; }
+.summary-actions .btn { flex: 1; }

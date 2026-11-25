@@ -8,7 +8,7 @@ import type { Place } from "../src/cities/placeTypes";
 
 // Synthetic place (not real data): only the fields scoring reads matter.
 const place = (over: Partial<Place> = {}): Place => ({
-  id: "test", name: "Test", osm: "way/1",
+  id: "test", name: "Test", category: "landmark", osm: "way/1",
   centroid: [-58.4, -34.6],
   footprint: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } },
   eqDiameterM: 100, facadeBearing: 90, bearingSource: "manual", symmetry: 1,

@@ -26,6 +26,23 @@ export interface GameState {
 
 export type Rng = () => number;
 
+/** Which places a game draws from. */
+export type PlaceSet = "all" | "stadiums" | "landmarks";
+
+export function filterPlaces(places: Place[], set: PlaceSet): Place[] {
+  if (set === "stadiums") return places.filter((p) => p.category === "stadium");
+  if (set === "landmarks") return places.filter((p) => p.category !== "stadium");
+  return places;
+}
+
+export function countBySet(places: Place[]): Record<PlaceSet, number> {
+  return {
+    all: places.length,
+    stadiums: filterPlaces(places, "stadiums").length,
+    landmarks: filterPlaces(places, "landmarks").length,
+  };
+}
+
 /** Fisher-Yates on a copy; picks `count` distinct places. */
 export function pickPlaces(places: Place[], count: number, rng: Rng = Math.random): Place[] {
   const pool = [...places];

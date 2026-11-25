@@ -36,6 +36,7 @@ interface PlaceSource {
   select: string;
   osm?: string;
   symmetry: Symmetry;
+  category?: "stadium";
   facadeBearing?: number;
   /** Pin which entrance=main node defines the facade, e.g. "node/123". */
   entrance?: string;
@@ -384,6 +385,7 @@ async function main() {
       places.push({
         id: p.id,
         name: p.name,
+        category: p.category ?? "landmark",
         osm: ref,
         centroid: roundCoords(centroid),
         footprint: { type: "Feature", properties: {}, geometry: roundGeometry(footprint.geometry) },

@@ -1,5 +1,5 @@
 {
-  "$comment": "Data sources for CABA. `select` is an Overpass selector (evaluated inside the city bbox); once the right element is confirmed, pin it with `osm` (e.g. \"way/123\") so runs are stable. Facade orientation, in order: entrance=main node (`entrance` pins one) -> `facadeHint` (manual approximate degrees, snapped to the nearest wall) -> geometry for symmetry 2/4 -> `facadeBearing` (raw manual degrees). `symmetry`: 1 | 2 | 4 | \"radial\".",
+  "$comment": "Data sources for CABA. `select` is an Overpass selector (evaluated inside the city bbox); once the right element is confirmed, pin it with `osm` (e.g. \"way/123\") so runs are stable. Facade orientation, in order: entrance=main node (`entrance` pins one) -> `facadeHint` (manual approximate degrees, snapped to the nearest wall) -> geometry for symmetry 2/4 -> `facadeBearing` (raw manual degrees). `symmetry`: 1 | 2 | 4 | \"radial\". `category`: \"stadium\" or omitted (landmark).",
   "city": "caba",
   "bbox": [-58.56, -34.72, -58.32, -34.51],
   "boundary": { "select": "relation[\"boundary\"=\"administrative\"][\"admin_level\"=\"4\"][\"name\"=\"Ciudad Autónoma de Buenos Aires\"]" },
@@ -11,10 +11,10 @@
     { "id": "teatro-colon", "name": "Teatro Colón", "select": "nwr[\"name\"=\"Teatro Colón\"]", "symmetry": 1, "entrance": "node/4293917813" },
     { "id": "recoleta", "name": "Cementerio de la Recoleta", "select": "nwr[\"name\"~\"Cementerio de (la )?Recoleta\"]", "symmetry": 1 },
     { "id": "planetario", "name": "Planetario Galileo Galilei", "select": "nwr[\"name\"~\"Planetario\"][\"name\"~\"Galilei\"]", "symmetry": "radial" },
-    { "id": "bombonera", "name": "Estadio Alberto J. Armando – La Bombonera (Boca Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bombonera|Alberto J\\\\. Armando\"]", "symmetry": 1, "facadeHint": 150 },
+    { "id": "bombonera", "name": "Estadio Alberto J. Armando – La Bombonera (Boca Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bombonera|Alberto J\\\\. Armando\"]", "symmetry": 1, "facadeHint": 150, "category": "stadium" },
     { "id": "puente-mujer", "name": "Puente de la Mujer", "select": "nwr[\"name\"=\"Puente de la Mujer\"]", "symmetry": 2, "bridgeWidthM": 6.2, "mergeCandidates": true },
     { "id": "floralis", "name": "Floralis Genérica", "select": "nwr[\"name\"~\"Floralis\"]", "symmetry": "radial" },
-    { "id": "monumental", "name": "Estadio Monumental (River Plate)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2 },
+    { "id": "monumental", "name": "Estadio Monumental (River Plate)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2, "category": "stadium" },
     { "id": "barolo", "name": "Palacio Barolo", "select": "nwr[\"name\"=\"Palacio Barolo\"]", "symmetry": 1, "facadeHint": 0 },
     { "id": "torre-monumental", "name": "Torre Monumental (ex Torre de los Ingleses)", "select": "nwr[\"name\"~\"Torre Monumental|Torre de los Ingleses\"]", "symmetry": 4 },
     { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1, "containingBuilding": true, "facadeHint": 0, "excludeSize": "la huella en OSM cubre solo parte del ex teatro" },
@@ -22,9 +22,9 @@
     { "id": "aguas-corrientes", "name": "Palacio de Aguas Corrientes", "select": "nwr[\"name\"~\"Palacio de (las )?Aguas Corrientes\"]", "symmetry": 1, "facadeHint": 0 },
     { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1, "osm": "way/102440659", "facadeHint": 300 },
     { "id": "movistar-arena", "name": "Movistar Arena", "select": "nwr[\"name\"~\"Movistar Arena\"]", "symmetry": 1, "facadeHint": 135 },
-    { "id": "gasometro", "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bidegain|Gas[oó]metro\"]", "symmetry": 2 },
-    { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2 },
-    { "id": "duco", "name": "Estadio Tomás Adolfo Ducó (Huracán)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Duc[oó]\"]", "symmetry": 2 },
-    { "id": "maradona", "name": "Estadio Diego Armando Maradona (Argentinos Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Diego Armando Maradona\"]", "symmetry": 2 }
+    { "id": "gasometro", "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bidegain|Gas[oó]metro\"]", "symmetry": 2, "category": "stadium" },
+    { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2, "category": "stadium" },
+    { "id": "duco", "name": "Estadio Tomás Adolfo Ducó (Huracán)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Duc[oó]\"]", "symmetry": 2, "category": "stadium" },
+    { "id": "maradona", "name": "Estadio Diego Armando Maradona (Argentinos Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Diego Armando Maradona\"]", "symmetry": 2, "category": "stadium" }
   ]
 }

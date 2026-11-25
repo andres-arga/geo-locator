@@ -5,6 +5,7 @@
   {
    "id": "obelisco",
    "name": "Obelisco",
+   "category": "landmark",
    "osm": "way/1332861812",
    "centroid": [
     -58.38163,
@@ -53,6 +54,7 @@
   {
    "id": "casa-rosada",
    "name": "Casa Rosada",
+   "category": "landmark",
    "osm": "way/185738988",
    "centroid": [
     -58.37027,
@@ -157,6 +159,7 @@
   {
    "id": "congreso",
    "name": "Congreso de la Nación",
+   "category": "landmark",
    "osm": "relation/2468981",
    "centroid": [
     -58.392685,
@@ -457,6 +460,7 @@
   {
    "id": "teatro-colon",
    "name": "Teatro Colón",
+   "category": "landmark",
    "osm": "way/23633911",
    "centroid": [
     -58.383136,
@@ -573,6 +577,7 @@
   {
    "id": "recoleta",
    "name": "Cementerio de la Recoleta",
+   "category": "landmark",
    "osm": "way/183842128",
    "centroid": [
     -58.393442,
@@ -693,6 +698,7 @@
   {
    "id": "planetario",
    "name": "Planetario Galileo Galilei",
+   "category": "landmark",
    "osm": "way/1224777740",
    "centroid": [
     -58.411721,
@@ -837,6 +843,7 @@
   {
    "id": "bombonera",
    "name": "Estadio Alberto J. Armando – La Bombonera (Boca Juniors)",
+   "category": "stadium",
    "osm": "way/248598885",
    "centroid": [
     -58.364832,
@@ -985,6 +992,7 @@
   {
    "id": "puente-mujer",
    "name": "Puente de la Mujer",
+   "category": "landmark",
    "osm": "way/23648273",
    "centroid": [
     -58.36512,
@@ -1185,6 +1193,7 @@
   {
    "id": "floralis",
    "name": "Floralis Genérica",
+   "category": "landmark",
    "osm": "way/176336341",
    "centroid": [
     -58.394002,
@@ -1305,6 +1314,7 @@
   {
    "id": "monumental",
    "name": "Estadio Monumental (River Plate)",
+   "category": "stadium",
    "osm": "relation/1646999",
    "centroid": [
     -58.449731,
@@ -1793,6 +1803,7 @@
   {
    "id": "barolo",
    "name": "Palacio Barolo",
+   "category": "landmark",
    "osm": "way/1386044833",
    "centroid": [
     -58.385727,
@@ -1841,6 +1852,7 @@
   {
    "id": "torre-monumental",
    "name": "Torre Monumental (ex Torre de los Ingleses)",
+   "category": "landmark",
    "osm": "way/52563680",
    "centroid": [
     -58.37374,
@@ -1893,6 +1905,7 @@
   {
    "id": "ateneo",
    "name": "Librería El Ateneo Grand Splendid",
+   "category": "landmark",
    "osm": "way/477384752",
    "centroid": [
     -58.394255,
@@ -1973,6 +1986,7 @@
   {
    "id": "galerias-pacifico",
    "name": "Galerías Pacífico",
+   "category": "landmark",
    "osm": "way/28263519",
    "centroid": [
     -58.374774,
@@ -2145,6 +2159,7 @@
   {
    "id": "aguas-corrientes",
    "name": "Palacio de Aguas Corrientes",
+   "category": "landmark",
    "osm": "relation/1376292",
    "centroid": [
     -58.394982,
@@ -2215,6 +2230,7 @@
   {
    "id": "kavanagh",
    "name": "Edificio Kavanagh",
+   "category": "landmark",
    "osm": "way/102440659",
    "centroid": [
     -58.37462,
@@ -2291,6 +2307,7 @@
   {
    "id": "movistar-arena",
    "name": "Movistar Arena",
+   "category": "landmark",
    "osm": "way/702175944",
    "centroid": [
     -58.44815,
@@ -2403,6 +2420,7 @@
   {
    "id": "gasometro",
    "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)",
+   "category": "stadium",
    "osm": "relation/4164015",
    "centroid": [
     -58.440084,
@@ -2555,6 +2573,7 @@
   {
    "id": "amalfitani",
    "name": "Estadio José Amalfitani (Vélez Sarsfield)",
+   "category": "stadium",
    "osm": "way/23243149",
    "centroid": [
     -58.520695,
@@ -2747,6 +2766,7 @@
   {
    "id": "duco",
    "name": "Estadio Tomás Adolfo Ducó (Huracán)",
+   "category": "stadium",
    "osm": "relation/17351933",
    "centroid": [
     -58.396501,
@@ -3071,6 +3091,7 @@
   {
    "id": "maradona",
    "name": "Estadio Diego Armando Maradona (Argentinos Juniors)",
+   "category": "stadium",
    "osm": "relation/4161394",
    "centroid": [
     -58.472644,

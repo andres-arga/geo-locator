@@ -7,9 +7,9 @@ import { maxPointsPerGame, type GameOptions } from "../game/scoring";
 import {
   confirmPiece, currentRound, newGame, nextRound, placePiece, totalScore, type GameState,
 } from "../game/state";
-import { clearResult, createPinElement, PiecePin, showResult } from "../map/overlays";
+import { clearResult, clearReview, createPinElement, PiecePin, showResult, showReview, type ReviewItem } from "../map/overlays";
 import { MAX_DIAMETER_M, MIN_DIAMETER_M, SilhouettePiece } from "../map/piece";
-import { vertices } from "../game/geometry";
+import { transformFootprint, vertices } from "../game/geometry";
 import { enableDrag } from "./dnd";
 import { esc, formatBearing, formatDistance, formatPoints } from "./format";
 
@@ -60,6 +60,7 @@ export class GameController {
     this.offKeys?.();
     this.removePiece();
     clearResult(this.map);
+    clearReview(this.map);
     this.panel.innerHTML = "";
   }
 
@@ -158,9 +159,41 @@ export class GameController {
     this.state = nextRound(this.state);
     this.removePiece();
     clearResult(this.map);
+    if (this.state.phase === "finished") {
+      this.render();
+      this.review(null);
+      return;
+    }
     // Back to the neutral city view so the previous answer does not hint the next one.
     this.map.easeTo({ center: this.city.center, zoom: this.city.zoom, duration: 700 });
     this.render();
+  }
+
+  /** Player's silhouette for a finished round (null in the base mode, which uses a point). */
+  private playerFootprint(i: number) {
+    const { place, placement } = this.state.rounds[i];
+    const o = this.state.options;
+    if (!placement || !(o.size || o.orientation)) return null;
+    const rotation = placement.bearing - (place.facadeBearing ?? placement.bearing);
+    return transformFootprint(place.footprint, place.centroid, placement.center, placement.sizeRatio, o.orientation ? rotation : 0);
+  }
+
+  /** Final review on the map: every round (index null) or one of them. */
+  private review(index: number | null) {
+    const items: ReviewItem[] = this.state.rounds
+      .map((r, i) => ({ index: i + 1, place: r.place, placed: r.placement!.center, playerFootprint: this.playerFootprint(i) }))
+      .filter((_, i) => index === null || i === index);
+    showReview(this.map, items);
+    const pts = items.flatMap((it) => [
+      it.placed,
+      ...(vertices(it.place.footprint) as [number, number][]),
+      ...(it.playerFootprint ? (vertices(it.playerFootprint) as [number, number][]) : []),
+    ]);
+    const [w, s, e, n] = bounds(pts);
+    this.map.fitBounds([[w, s], [e, n]], { padding: 60, maxZoom: 16.5, duration: 800 });
+    this.panel.querySelectorAll<HTMLElement>("[data-review]").forEach((row) =>
+      row.classList.toggle("selected", index !== null && Number(row.dataset.review) === index),
+    );
   }
 
   // ------------------------------------------------------------- view
@@ -188,13 +221,7 @@ export class GameController {
 
   private body(): string {
     const s = this.state;
-    if (s.phase === "finished") {
-      return `<ol class="summary">${s.rounds
-        .map((r) => `<li><span>${esc(r.place.name)}</span><span>${formatDistance(r.score!.distanceM)}</span><strong>${formatPoints(r.score!.total)}</strong></li>`)
-        .join("")}</ol>
-        <p class="total">Total: <strong>${formatPoints(totalScore(s))}</strong> pts</p>
-        <button class="btn primary" data-action="restart">Jugar de nuevo</button>`;
-    }
+    if (s.phase === "finished") return this.summary();
 
     const { place, score } = currentRound(s);
     const card = `<figure class="card ${s.phase === "placing" ? "draggable" : "placed"}" data-card>
@@ -215,22 +242,52 @@ export class GameController {
     }
     // result
     const last = s.current === s.rounds.length - 1;
+    const mult = MAP_LEVELS[s.options.level].multiplier;
     return `${card}
       <dl class="result">
         <dt>Distancia</dt><dd>${formatDistance(score!.distanceM)}</dd>
         <dt>Posición</dt><dd>${formatPoints(score!.position.points)} / ${formatPoints(score!.position.max)}</dd>
         ${this.sizeResult()}
         ${this.orientationResult()}
+        ${mult === 1 ? "" : `<dt>Multiplicador</dt><dd>${formatPoints(score!.subtotal)} × ${String(mult).replace(".", ",")}</dd>`}
         <dt>Total ronda</dt><dd><strong>${formatPoints(score!.total)}</strong></dd>
       </dl>
       <p class="legend"><span class="sw real"></span> ubicación real · ${this.piece ? '<span class="sw mine"></span> tu pieza · ' : ""}<span class="sw err"></span> distancia</p>
       <button class="btn primary" data-action="next">${last ? "Ver resultado final" : "Siguiente lugar"}</button>`;
   }
 
+  private summary(): string {
+    const s = this.state;
+    const o = s.options;
+    const mult = MAP_LEVELS[o.level].multiplier;
+    const pts = (c: { points: number } | undefined) => (c ? formatPoints(c.points) : "");
+    const rows = s.rounds
+      .map((r, i) => {
+        const sc = r.score!;
+        const parts = [`<span>${formatDistance(sc.distanceM)}</span>`, `<span title="Posición">Pos ${pts(sc.position)}</span>`];
+        if (o.size) parts.push(`<span title="Tamaño">Tam ${pts(sc.size)}${sc.size?.compensated ? "*" : ""}</span>`);
+        if (o.orientation) parts.push(`<span title="Orientación">Ori ${pts(sc.orientation)}${sc.orientation?.compensated ? "*" : ""}</span>`);
+        return `<li data-review="${i}" tabindex="0" title="Ver en el mapa">
+          <div class="row-top"><span class="num">${i + 1}</span><span class="name">${esc(r.place.name)}</span><strong>${formatPoints(sc.total)}</strong></div>
+          <div class="row-detail">${parts.join(" · ")}</div></li>`;
+      })
+      .join("");
+    const compensated = s.rounds.some((r) => r.score!.size?.compensated || r.score!.orientation?.compensated);
+    return `<p class="total">Total: <strong>${formatPoints(totalScore(s))}</strong> pts
+        <span class="muted">de ${formatPoints(maxPointsPerGame(o, s.rounds.length))}${mult === 1 ? "" : ` · incluye ×${String(mult).replace(".", ",")}`}</span></p>
+      <ol class="summary-list">${rows}</ol>
+      <p class="muted">Tocá un lugar para verlo en el mapa.${compensated ? " * componente compensado con la posición." : ""}</p>
+      <p class="legend"><span class="sw real"></span> real · <span class="sw mine"></span> tu ubicación · <span class="sw err"></span> distancia</p>
+      <div class="summary-actions">
+        <button class="btn" data-action="review-all">Ver todos</button>
+        <button class="btn primary" data-action="restart">Jugar de nuevo</button>
+      </div>`;
+  }
+
   private sizeControls(): string {
     if (!this.state.options.size) return "";
     if (!this.resizable) {
-      return `<p class="note">Este lugar no puntúa tamaño: su huella es muy chica. Ese componente se calcula con tu puntaje de posición.</p>`;
+      return `<p class="note">Este lugar no puntúa tamaño: su huella en el mapa es muy chica o incompleta. Ese componente se calcula con tu puntaje de posición.</p>`;
     }
     const d = this.piece?.diameter() ?? 100;
     return `<div class="size-control">
@@ -287,6 +344,17 @@ export class GameController {
     on("drop-center", () => this.dropAtCenter());
     on("confirm", () => this.confirm());
     on("next", () => this.next());
+    on("review-all", () => this.review(null));
+    this.panel.querySelectorAll<HTMLElement>("[data-review]").forEach((row) => {
+      const go = () => this.review(Number(row.dataset.review));
+      row.addEventListener("click", go);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          go();
+        }
+      });
+    });
     // The app shell owns the full place list and decides how to start a new game.
     on("restart", () => this.panel.dispatchEvent(new CustomEvent("game:restart", { bubbles: true })));
 

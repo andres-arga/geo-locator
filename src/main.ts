@@ -3,9 +3,10 @@ import { CITIES, DEFAULT_CITY } from "./cities";
 import type { PlacesFile } from "./cities/placeTypes";
 import { createMap } from "./map/createMap";
 import { applyLevel } from "./map/levels";
-import { addResultLayers } from "./map/overlays";
+import { addResultLayers, addReviewLayers } from "./map/overlays";
 import { GameController } from "./ui/game";
-import { createMenu, loadSettings, saveSettings, type Settings } from "./ui/menu";
+import { createMenu, loadSettings, saveSettings, type PlaceCounts, type Settings } from "./ui/menu";
+import { countBySet, filterPlaces } from "./game/state";
 import { createStartScreen } from "./ui/start";
 
 const app = document.getElementById("app")!;
@@ -28,12 +29,13 @@ const { map, loaded } = createMap(mapEl, city, baseUrl);
 let settings: Settings = loadSettings();
 let game: GameController | null = null;
 let places: PlacesFile["places"] = [];
+let counts: PlaceCounts = null;
 
 function start() {
   game?.destroy();
   map.jumpTo({ center: city.center, zoom: city.zoom });
   const { level, size, orientation } = settings;
-  game = new GameController(map, mapEl, gameEl, city, places, { level, size, orientation });
+  game = new GameController(map, mapEl, gameEl, city, filterPlaces(places, settings.placeSet), { level, size, orientation });
 }
 
 function useSettings(s: Settings) {
@@ -57,6 +59,7 @@ function goHome() {
 
 const menu = createMenu({
   current: () => settings,
+  counts: () => counts,
   onApply: (s) => {
     useSettings(s);
     start();
@@ -72,9 +75,11 @@ gameEl.addEventListener("game:restart", start);
     loaded,
   ]);
   places = data.places;
+  counts = countBySet(places);
   addResultLayers(map);
+  addReviewLayers(map);
   applyLevel(map, { level: settings.level, streetNames: settings.streetNames });
-  startScreen.setReady(true);
+  startScreen.setReady(counts);
 })().catch((e) => {
   gameEl.innerHTML = `<p class="error">No se pudieron cargar los datos: ${(e as Error).message}</p>`;
 });
