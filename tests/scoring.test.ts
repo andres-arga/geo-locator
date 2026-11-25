@@ -20,14 +20,14 @@ const at = (meters: number, bearing = 0) =>
 const opts = (o: Partial<GameOptions> = {}): GameOptions => ({ level: "easy", size: false, orientation: false, ...o });
 
 describe("position", () => {
-  it("is 1000 at distance 0 and 1000/e at k = 500 m", () => {
+  it("is 1000 at distance 0 and 1000/e at k = 1000 m", () => {
     expect(positionPoints(0)).toBe(1000);
-    expect(positionPoints(500)).toBeCloseTo(367.88, 1);
-    expect(positionPoints(5000)).toBeLessThan(1);
+    expect(positionPoints(1000)).toBeCloseTo(367.88, 1);
+    expect(positionPoints(10000)).toBeLessThan(1);
   });
   it("uses the real geodesic distance between placement and centroid", () => {
-    const r = scorePlacement(place(), { center: at(500, 37), sizeRatio: 1, bearing: 0 }, opts());
-    expect(r.distanceM).toBeCloseTo(500, 0);
+    const r = scorePlacement(place(), { center: at(1000, 37), sizeRatio: 1, bearing: 0 }, opts());
+    expect(r.distanceM).toBeCloseTo(1000, 0);
     expect(r.position.points).toBeCloseTo(367.88, 0);
   });
 });
