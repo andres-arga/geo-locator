@@ -26,7 +26,7 @@ export const COLORS = {
   highwayCasing: "#c98a2e",
   rail: "#8f8a80",
   boundary: "#5b4a8b",
-  cityBlank: "#ffffff",
+  cityBlank: "#f6f1e4", // cream: lighter than the outskirts, not pure white
   label: "#5a5448",
 };
 
