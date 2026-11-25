@@ -4,9 +4,9 @@ import type { Place } from "../cities/placeTypes";
 import { transformFootprint, vertices } from "../game/geometry";
 import { formatBearing } from "../ui/format";
 
-/** Player-chosen equivalent diameter limits (metres). Wide enough for any CABA place. */
+/** Player-chosen equivalent diameter limits (metres). tests/data.test.ts checks every place fits with room to overshoot. */
 export const MIN_DIAMETER_M = 10;
-export const MAX_DIAMETER_M = 600;
+export const MAX_DIAMETER_M = 1500;
 
 export interface PieceValue {
   center: [number, number];
