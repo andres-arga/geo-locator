@@ -20,7 +20,7 @@
     { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1, "containingBuilding": true },
     { "id": "galerias-pacifico", "name": "Galerías Pacífico", "select": "nwr[\"name\"~\"Galer[ií]as Pac[ií]fico\"]", "symmetry": 1, "facadeHint": 270 },
     { "id": "aguas-corrientes", "name": "Palacio de Aguas Corrientes", "select": "nwr[\"name\"~\"Palacio de (las )?Aguas Corrientes\"]", "symmetry": 1, "facadeHint": 0 },
-    { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1, "osm": "way/102440659" },
+    { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1, "osm": "way/102440659", "facadeHint": 300 },
     { "id": "movistar-arena", "name": "Movistar Arena", "select": "nwr[\"name\"~\"Movistar Arena\"]", "symmetry": 4 },
     { "id": "gasometro", "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bidegain|Gas[oó]metro\"]", "symmetry": 2 },
     { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2 },
