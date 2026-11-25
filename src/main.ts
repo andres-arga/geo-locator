@@ -5,7 +5,8 @@ import { createMap } from "./map/createMap";
 import { applyLevel } from "./map/levels";
 import { addResultLayers } from "./map/overlays";
 import { GameController } from "./ui/game";
-import { createMenu, type Settings } from "./ui/menu";
+import { createMenu, loadSettings, saveSettings, type Settings } from "./ui/menu";
+import { createStartScreen } from "./ui/start";
 
 const app = document.getElementById("app")!;
 const city = CITIES[DEFAULT_CITY];
@@ -23,8 +24,8 @@ const gameEl = document.getElementById("game")!;
 
 const { map, loaded } = createMap(mapEl, city, baseUrl);
 
-// Default: the simplest mode (location only, easy map, modifiers off).
-let settings: Settings = { level: "easy", size: false, orientation: false, streetNames: false };
+// Last used options (or the simplest mode: location only, easy map, modifiers off).
+let settings: Settings = loadSettings();
 let game: GameController | null = null;
 let places: PlacesFile["places"] = [];
 
@@ -35,14 +36,32 @@ function start() {
   game = new GameController(map, mapEl, gameEl, city, places, { level, size, orientation });
 }
 
+function useSettings(s: Settings) {
+  settings = s;
+  saveSettings(s);
+  applyLevel(map, { level: s.level, streetNames: s.streetNames });
+}
+
+const startScreen = createStartScreen(app, city.name, (s) => {
+  useSettings(s);
+  startScreen.hide();
+  start();
+});
+
+function goHome() {
+  game?.destroy();
+  game = null;
+  map.jumpTo({ center: city.center, zoom: city.zoom });
+  startScreen.show(settings);
+}
+
 const menu = createMenu({
   current: () => settings,
-  orientationAvailable: true,
   onApply: (s) => {
-    settings = s;
-    applyLevel(map, { level: s.level, streetNames: s.streetNames });
+    useSettings(s);
     start();
   },
+  onHome: goHome,
 });
 document.getElementById("menu-btn")!.addEventListener("click", () => menu.open());
 gameEl.addEventListener("game:restart", start);
@@ -55,10 +74,13 @@ gameEl.addEventListener("game:restart", start);
   places = data.places;
   addResultLayers(map);
   applyLevel(map, { level: settings.level, streetNames: settings.streetNames });
-  start();
+  startScreen.setReady(true);
 })().catch((e) => {
   gameEl.innerHTML = `<p class="error">No se pudieron cargar los datos: ${(e as Error).message}</p>`;
 });
+
+// The game starts from the welcome screen.
+startScreen.show(settings);
 
 // Exposed for automated checks (Playwright).
 (window as unknown as { __map: typeof map }).__map = map;

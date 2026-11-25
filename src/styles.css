@@ -208,3 +208,27 @@ dialog.menu::backdrop { background: rgba(30, 25, 45, .45); }
 @media (pointer: coarse) {
   .piece-handle.rotate { width: 32px; height: 32px; margin: -16px 0 0 -16px; }
 }
+
+/* ---------- Start screen ---------- */
+.start {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
+  background: rgba(247, 244, 236, .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  overflow: auto;
+}
+.start[hidden] { display: none; }
+.start-card {
+  width: min(480px, 100%); background: #fff; border-radius: 18px; padding: 22px 24px;
+  box-shadow: 0 12px 48px rgba(43, 37, 64, .25); display: flex; flex-direction: column; gap: 14px;
+}
+.start-head h1 { margin: 0; font-size: 30px; letter-spacing: -.5px; color: var(--accent); }
+.start-city { margin: 2px 0 0; color: #6b6455; }
+.start-how { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.start-how li { display: flex; gap: 8px; }
+.start .settings, dialog.menu .settings { display: flex; flex-direction: column; gap: 12px; }
+.start fieldset { border: 1px solid #e4ddcd; border-radius: 10px; padding: 10px 12px; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.start legend { font-weight: 600; padding: 0 4px; }
+.start-btn { font-size: 17px; padding: 12px; }
+.start-btn:disabled { opacity: .6; cursor: progress; }
+.home-link { margin-right: auto; }
+/* Keep the sidebar quiet while the welcome screen is up. */
+body.on-start .panel { visibility: hidden; }
