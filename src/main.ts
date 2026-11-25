@@ -1,6 +1,7 @@
 import "./styles.css";
-import { CITIES, DEFAULT_CITY } from "./cities";
-import type { PlacesFile } from "./cities/placeTypes";
+import type { Map as MlMap } from "maplibre-gl";
+import { CITIES, CITY_LIST, DEFAULT_CITY, type CityConfig } from "./cities";
+import type { Place, PlacesFile } from "./cities/placeTypes";
 import { createMap } from "./map/createMap";
 import { applyLevel } from "./map/levels";
 import { addResultLayers, addReviewLayers } from "./map/overlays";
@@ -11,52 +12,89 @@ import { getBest, recordKey } from "./game/records";
 import { createStartScreen } from "./ui/start";
 
 const app = document.getElementById("app")!;
-const city = CITIES[DEFAULT_CITY];
 const baseUrl = new URL(import.meta.env.BASE_URL, location.href).href;
 
 app.innerHTML = `<div class="layout">
-  <div class="map-area"><div class="map" id="map"></div></div>
+  <div class="map-area" id="map-area"></div>
   <aside class="panel">
     <div class="panel-game" id="game" aria-live="polite"></div>
     <footer class="panel-foot"><button class="btn menu-btn" id="menu-btn" aria-haspopup="dialog">☰ Menú</button></footer>
   </aside>
 </div>`;
-const mapEl = document.getElementById("map")!;
+const mapArea = document.getElementById("map-area")!;
 const gameEl = document.getElementById("game")!;
-
-const { map, loaded } = createMap(mapEl, city, baseUrl);
 
 // Last used options (or the simplest mode: location only, easy map, modifiers off).
 let settings: Settings = loadSettings();
 let game: GameController | null = null;
-let places: PlacesFile["places"] = [];
+/** Places of every city, loaded once at startup. */
+const placesByCity: Record<string, Place[]> = {};
 let counts: PlaceCounts = null;
 
-function start() {
+// ------------------------------------------------------------------ map per city
+
+interface CityMap {
+  city: CityConfig;
+  map: MlMap;
+  el: HTMLElement;
+  ready: Promise<void>;
+}
+let current: CityMap | null = null;
+
+/** The map shows one city; switching city rebuilds it with that city's style and data. */
+function showCity(cityId: string): CityMap {
+  if (current?.city.id === cityId) return current;
   game?.destroy();
-  map.jumpTo({ center: city.center, zoom: city.zoom });
+  game = null;
+  current?.map.remove();
+  mapArea.innerHTML = "";
+  const city = CITIES[cityId] ?? CITIES[DEFAULT_CITY];
+  const el = document.createElement("div");
+  el.className = "map";
+  mapArea.appendChild(el);
+  const { map, loaded } = createMap(el, city, baseUrl);
+  const ready = loaded.then(() => {
+    addResultLayers(map);
+    addReviewLayers(map);
+    applyLevel(map, { level: settings.level, streetNames: settings.streetNames });
+  });
+  current = { city, map, el, ready };
+  // Exposed for automated checks (Playwright).
+  (window as unknown as { __map: MlMap }).__map = map;
+  return current;
+}
+
+async function start() {
+  const cm = showCity(settings.city);
+  await cm.ready;
+  game?.destroy();
+  cm.map.jumpTo({ center: cm.city.center, zoom: cm.city.zoom });
   const { level, size, orientation } = settings;
-  game = new GameController(map, mapEl, gameEl, city, filterPlaces(places, settings.placeSet), { level, size, orientation }, recordKey(city.id, settings));
+  const places = filterPlaces(placesByCity[cm.city.id] ?? [], settings.placeSet);
+  game = new GameController(cm.map, cm.el, gameEl, cm.city, places, { level, size, orientation }, recordKey(cm.city.id, settings));
 }
 
 function useSettings(s: Settings) {
   settings = s;
   saveSettings(s);
-  applyLevel(map, { level: s.level, streetNames: s.streetNames });
+  if (current?.city.id === s.city) applyLevel(current.map, { level: s.level, streetNames: s.streetNames });
 }
 
-const best = (s: Settings) => getBest(recordKey(city.id, s));
+const best = (s: Settings) => getBest(recordKey(s.city, s));
 
-const startScreen = createStartScreen(app, city.name, (s) => {
+const startScreen = createStartScreen(app, (s) => {
   useSettings(s);
   startScreen.hide();
-  start();
-}, best);
+  void start();
+}, best, (draft) => {
+  // Preview the chosen city behind the welcome card.
+  if (counts?.[draft.city]?.all) showCity(draft.city);
+});
 
 function goHome() {
   game?.destroy();
   game = null;
-  map.jumpTo({ center: city.center, zoom: city.zoom });
+  if (current) current.map.jumpTo({ center: current.city.center, zoom: current.city.zoom });
   startScreen.show(settings);
 }
 
@@ -66,30 +104,41 @@ const menu = createMenu({
   best,
   onApply: (s) => {
     useSettings(s);
-    start();
+    void start();
   },
   onHome: goHome,
 });
 document.getElementById("menu-btn")!.addEventListener("click", () => menu.open());
-gameEl.addEventListener("game:restart", start);
+gameEl.addEventListener("game:restart", () => void start());
+
+// ------------------------------------------------------------------ startup
+
+showCity(settings.city);
+startScreen.show(settings);
 
 (async () => {
-  const [data] = await Promise.all([
-    fetch(new URL(city.places, baseUrl)).then((r) => r.json() as Promise<PlacesFile>),
-    loaded,
-  ]);
-  places = data.places;
-  counts = countBySet(places);
-  addResultLayers(map);
-  addReviewLayers(map);
-  applyLevel(map, { level: settings.level, streetNames: settings.streetNames });
+  // A city whose data is not generated yet simply has no places (shown as "próximamente").
+  const files = await Promise.all(
+    CITY_LIST.map((c) =>
+      fetch(new URL(c.places, baseUrl))
+        .then((r) => (r.ok ? (r.json() as Promise<PlacesFile>) : null))
+        .catch(() => null),
+    ),
+  );
+  const all: Record<string, ReturnType<typeof countBySet>> = {};
+  CITY_LIST.forEach((c, i) => {
+    placesByCity[c.id] = files[i]?.places ?? [];
+    all[c.id] = countBySet(placesByCity[c.id]);
+  });
+  counts = all;
+  if (!(counts[settings.city]?.all > 0)) {
+    // Saved city has no data (yet): fall back to the default one.
+    settings = { ...settings, city: DEFAULT_CITY };
+    showCity(settings.city);
+    startScreen.show(settings);
+  }
+  await (current as CityMap | null)?.ready; // assigned inside showCity()
   startScreen.setReady(counts);
 })().catch((e) => {
   gameEl.innerHTML = `<p class="error">No se pudieron cargar los datos: ${(e as Error).message}</p>`;
 });
-
-// The game starts from the welcome screen.
-startScreen.show(settings);
-
-// Exposed for automated checks (Playwright).
-(window as unknown as { __map: typeof map }).__map = map;

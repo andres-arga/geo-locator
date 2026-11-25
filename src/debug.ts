@@ -6,15 +6,16 @@
 import "./styles.css";
 import { destination } from "@turf/turf";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
-import { CITIES, DEFAULT_CITY } from "./cities";
+import { CITIES, CITY_LIST, DEFAULT_CITY } from "./cities";
 import type { PlacesFile } from "./cities/placeTypes";
 import { createMap } from "./map/createMap";
 import { applyLevel } from "./map/levels";
 
-const city = CITIES[DEFAULT_CITY];
+// ?city=<id> picks the city (default CABA).
+const city = CITIES[new URLSearchParams(location.search).get("city") ?? ""] ?? CITIES[DEFAULT_CITY];
 const baseUrl = new URL(import.meta.env.BASE_URL, location.href).href;
 const app = document.getElementById("app")!;
-app.innerHTML = `<div class="debug"><aside class="debug-list"><h1>Datos: ${city.name}</h1><p class="debug-legend">
+app.innerHTML = `<div class="debug"><aside class="debug-list"><h1>Datos: ${city.name}</h1><p class="debug-cities">${CITY_LIST.map((c) => c.id === city.id ? `<strong>${c.name}</strong>` : `<a href="?city=${c.id}">${c.name}</a>`).join(" · ")}</p><p class="debug-legend">
   <span class="sw calc"></span> rumbo calculado · <span class="sw manual"></span> manual · ✘ = excluido del modificador</p>
   <ol id="list"></ol></aside><div class="debug-map"><div class="map" id="map"></div></div></div>`;
 

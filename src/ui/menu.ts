@@ -2,31 +2,36 @@ import { MAP_LEVELS, ROUNDS_PER_GAME, type MapLevel } from "../config/game";
 import { maxPointsPerGame, type GameOptions } from "../game/scoring";
 import type { PlaceSet } from "../game/state";
 import type { BestScore } from "../game/records";
+import { CITIES, CITY_LIST, DEFAULT_CITY } from "../cities";
+import { esc, formatPoints } from "./format";
 
 /** Looks up the best score for a set of options (null = none yet). */
 export type BestLookup = (s: Settings) => BestScore | null;
-import { formatPoints } from "./format";
 
 /** Everything the menu controls. Street names only matter on the easy level. */
 export interface Settings extends GameOptions {
+  city: string;
   streetNames: boolean;
   placeSet: PlaceSet;
 }
 
-export const DEFAULT_SETTINGS: Settings = { level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all" };
+export const DEFAULT_SETTINGS: Settings = {
+  city: DEFAULT_CITY, level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all",
+};
 
 export function sameSettings(a: Settings, b: Settings): boolean {
   return (
-    a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
+    a.city === b.city && a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
     a.streetNames === b.streetNames && a.placeSet === b.placeSet
   );
 }
 
-/** Number of places available per set (known once the data is loaded). */
-export type PlaceCounts = Record<PlaceSet, number> | null;
+/** Places available per city and set (known once the data is loaded). */
+export type PlaceCounts = Record<string, Record<PlaceSet, number>> | null;
 
 export function roundsFor(s: Settings, counts: PlaceCounts): number {
-  return counts ? Math.min(ROUNDS_PER_GAME, counts[s.placeSet]) : ROUNDS_PER_GAME;
+  const c = counts?.[s.city];
+  return c ? Math.min(ROUNDS_PER_GAME, c[s.placeSet]) : ROUNDS_PER_GAME;
 }
 
 // ------------------------------------------------------------------ storage
@@ -39,7 +44,8 @@ export function loadSettings(): Settings {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
     if (raw && raw.level in MAP_LEVELS) {
       const placeSet: PlaceSet = ["all", "stadiums", "landmarks"].includes(raw.placeSet) ? raw.placeSet : "all";
-      return { level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
+      const city = typeof raw.city === "string" && raw.city in CITIES ? raw.city : DEFAULT_CITY;
+      return { city, level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
     }
   } catch {
     /* storage unavailable or corrupt: use defaults */
@@ -86,11 +92,19 @@ export function mountSettingsForm(
       .map(([id, l]) => `<label class="choice"><input type="radio" name="level" value="${id}" ${draft.level === id ? "checked" : ""}>
           <span><strong>${l.label}</strong> <span class="muted">×${l.multiplier}</span><br><span class="muted">${LEVEL_HELP[id]}</span></span></label>`)
       .join("");
+    const cityCounts = counts?.[draft.city];
     const sets = SETS.map((o) => `<label class="choice"><input type="radio" name="placeSet" value="${o.id}" ${draft.placeSet === o.id ? "checked" : ""}>
-          <span><strong>${o.label}</strong>${counts ? ` <span class="muted">(${counts[o.id]})</span>` : ""}<br><span class="muted">${o.help}</span></span></label>`).join("");
+          <span><strong>${o.label}</strong>${cityCounts ? ` <span class="muted">(${cityCounts[o.id]})</span>` : ""}<br><span class="muted">${o.help}</span></span></label>`).join("");
+    const cities = CITY_LIST.map((c) => {
+      // A city whose data is not generated yet is listed but cannot be chosen.
+      const unavailable = counts !== null && !(counts[c.id]?.all > 0);
+      return `<label class="choice ${unavailable ? "disabled" : ""}"><input type="radio" name="city" value="${c.id}" ${draft.city === c.id ? "checked" : ""} ${unavailable ? "disabled" : ""}>
+          <span><strong>${esc(c.name)}</strong>${unavailable ? ' <span class="muted">(próximamente)</span>' : ""}</span></label>`;
+    }).join("");
     const rounds = roundsFor(draft, counts);
     const record = best?.(draft);
     root.innerHTML = `
+      <fieldset class="cities"><legend>Ciudad</legend>${cities}</fieldset>
       <fieldset><legend>Lugares</legend>${sets}</fieldset>
       <fieldset><legend>Dificultad del mapa</legend>${levels}
         <label class="toggle ${draft.level !== "easy" ? "disabled" : ""}"><input type="checkbox" name="streetNames" ${draft.streetNames ? "checked" : ""} ${draft.level !== "easy" ? "disabled" : ""}>
@@ -109,6 +123,7 @@ export function mountSettingsForm(
       input.addEventListener("change", () => {
         if (input.name === "level") draft = { ...draft, level: input.value as MapLevel };
         else if (input.name === "placeSet") draft = { ...draft, placeSet: input.value as PlaceSet };
+        else if (input.name === "city") draft = { ...draft, city: input.value };
         else draft = { ...draft, [input.name]: input.checked };
         render(input.name, input.type === "radio" ? input.value : undefined);
         onChange({ ...draft });

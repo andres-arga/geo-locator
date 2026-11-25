@@ -10,9 +10,10 @@ export interface StartScreen {
 /** Welcome screen over the (blurred) map: what the game is, first options, start. */
 export function createStartScreen(
   parent: HTMLElement,
-  cityName: string,
   onStart: (s: Settings) => void,
   best: BestLookup,
+  /** Called on every edit (e.g. to preview the chosen city behind the card). */
+  onDraft?: (s: Settings) => void,
 ): StartScreen {
   const el = document.createElement("div");
   el.className = "start";
@@ -32,7 +33,7 @@ export function createStartScreen(
         <div class="start-card">
           <header class="start-head">
             <h1 id="start-title">Geo Locator</h1>
-            <p class="start-city">${cityName}</p>
+            <p class="start-city">Lugares icónicos de ciudades argentinas</p>
           </header>
           <ul class="start-how">
             <li><span aria-hidden="true">📍</span><span>Arrastrá cada lugar icónico al mapa, donde creas que está.</span></li>
@@ -42,7 +43,7 @@ export function createStartScreen(
           <div class="settings"></div>
           <button class="btn primary start-btn" data-start ${counts ? "" : "disabled"}>${counts ? "Empezar" : "Cargando mapa…"}</button>
         </div>`;
-      mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s), best);
+      mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => { draft = s; onDraft?.(s); }, best);
       button().addEventListener("click", () => onStart({ ...draft }));
       el.hidden = false;
       document.body.classList.add("on-start");
@@ -58,7 +59,7 @@ export function createStartScreen(
       counts = c;
       // Re-render the form with the counts, keeping the current draft.
       if (!el.hidden && el.querySelector(".settings")) {
-        mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s), best);
+        mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => { draft = s; onDraft?.(s); }, best);
       }
       const b = el.querySelector<HTMLButtonElement>("[data-start]");
       if (!b) return;

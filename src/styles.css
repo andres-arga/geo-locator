@@ -272,3 +272,5 @@ body.on-start .panel { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+.choice.disabled { opacity: .5; cursor: default; }
+fieldset.cities { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
