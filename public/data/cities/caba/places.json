@@ -836,7 +836,7 @@
   },
   {
    "id": "bombonera",
-   "name": "La Bombonera",
+   "name": "Estadio Alberto J. Armando – La Bombonera (Boca Juniors)",
    "osm": "way/248598885",
    "centroid": [
     -58.364832,
@@ -1304,7 +1304,7 @@
   },
   {
    "id": "monumental",
-   "name": "Estadio Monumental",
+   "name": "Estadio Monumental (River Plate)",
    "osm": "relation/1646999",
    "centroid": [
     -58.449731,
