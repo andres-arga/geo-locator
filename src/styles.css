@@ -49,3 +49,87 @@ body { background: var(--paper); }
 .sw.calc { background: #1e8a4c; }
 .sw.manual { background: #e07b00; }
 @media (max-width: 700px) { .debug { grid-template-columns: 1fr; grid-template-rows: 40% 60%; } .debug-list { order: 2; } }
+
+/* ---------- Game layout ---------- */
+.layout { display: grid; grid-template-columns: 1fr 320px; height: 100%; }
+.map-area { position: relative; min-height: 0; }
+.map-area.drop-target, .map.drop-target { outline: 3px dashed var(--accent); outline-offset: -3px; }
+.panel {
+  display: flex; flex-direction: column; gap: 12px; overflow: auto;
+  padding: 14px 16px; background: #fff; border-left: 1px solid #ddd6c8;
+}
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.panel-score { font-variant-numeric: tabular-nums; }
+.muted { color: #7a7364; font-size: 12px; }
+.strip { display: flex; gap: 5px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.strip li {
+  width: 34px; height: 34px; border-radius: 8px; border: 2px solid #e4ddcd; background: #faf8f3;
+  display: grid; place-items: center; opacity: .55;
+}
+.strip li img { width: 28px; height: 28px; }
+.strip li.current { border-color: var(--accent); opacity: 1; }
+.strip li.done { opacity: 1; background: #eef6f0; border-color: #9cc9ab; }
+.panel-body { display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  margin: 0; padding: 12px; border-radius: 14px; border: 2px solid #e4ddcd; background: #faf8f3;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; user-select: none;
+}
+.card img { width: 140px; height: 140px; pointer-events: none; }
+.card figcaption { font-weight: 600; text-align: center; }
+.card.draggable { cursor: grab; touch-action: none; border-style: dashed; border-color: var(--accent); }
+.card.draggable:active { cursor: grabbing; }
+.card.placed { opacity: .6; }
+.hint { margin: 0; color: #5a5448; font-size: 14px; }
+
+.btn {
+  font: inherit; border-radius: 10px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--accent); background: #fff; color: var(--accent);
+}
+.btn.primary { background: var(--accent); color: #fff; font-weight: 600; }
+.btn.link { border: none; padding: 4px 0; text-decoration: underline; text-align: left; background: none; }
+.btn:focus-visible { outline: 3px solid #f4b860; outline-offset: 2px; }
+
+.result { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-variant-numeric: tabular-nums; }
+.result dt { color: #6b6455; }
+.result dd { margin: 0; text-align: right; }
+.legend { margin: 0; font-size: 12px; color: #6b6455; }
+.sw.real { background: #1e8a4c; }
+.sw.err { background: #c0392b; }
+.summary { margin: 0; padding-left: 20px; font-size: 14px; }
+.summary li { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.total { font-size: 18px; margin: 0; }
+.error { color: #a12; }
+
+/* ---------- Pin (piece on the map) and drag ghost ---------- */
+.pin { width: 52px; height: 64px; cursor: grab; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.pin.locked { cursor: default; }
+.pin-head {
+  width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+  display: grid; place-items: center; position: relative; box-sizing: border-box;
+}
+.pin-head::after {
+  content: ""; position: absolute; left: 50%; bottom: -13px; transform: translateX(-50%);
+  border: 8px solid transparent; border-top: 9px solid var(--accent); border-bottom: 0;
+}
+.pin-head img { width: 36px; height: 36px; pointer-events: none; }
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none;
+  margin-left: -26px; margin-top: -64px; opacity: .9;
+}
+body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
+
+/* Dev toolbar sits over the map, not the whole page. */
+.map-area .dev-toolbar { top: 12px; }
+
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  /* Fixed height: a panel that grows or shrinks per step would resize and shift the map. */
+  .panel { border-left: none; border-top: 1px solid #ddd6c8; height: 40vh; padding: 10px 12px; gap: 8px; }
+  .panel-body { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .card { flex-direction: row; padding: 8px; }
+  .card img { width: 64px; height: 64px; }
+  .hint { flex: 1 1 140px; }
+  .strip li { width: 30px; height: 30px; }
+  .strip li img { width: 22px; height: 22px; }
+}
