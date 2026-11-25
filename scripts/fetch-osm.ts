@@ -2,8 +2,9 @@
  * Reproducible data preparation: city boundary, major parks and landmark
  * footprints/centroids/orientations from OpenStreetMap (Overpass API).
  *
- *   npm run data              # uses scripts/cache when present
- *   npm run data -- --refresh # ignore the cache and query Overpass again
+ *   npm run data                    # CABA (default), uses scripts/cache when present
+ *   npm run data -- cordoba         # another city: scripts/sources/<city>.places.json
+ *   npm run data -- caba --refresh  # ignore the cache and query Overpass again
  *   OVERPASS_URL=https://... npm run data
  *
  * Raw Overpass responses are cached in scripts/cache/ (keyed by query hash), so a
@@ -22,6 +23,7 @@ import { SCORING } from "../src/config/scoring";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = join(ROOT, "scripts/cache");
 const REFRESH = process.argv.includes("--refresh");
+const CITY = process.argv.slice(2).find((a) => !a.startsWith("-")) ?? "caba";
 const ENDPOINTS = process.env.OVERPASS_URL
   ? [process.env.OVERPASS_URL]
   : [
@@ -53,7 +55,7 @@ interface PlaceSource {
 interface CitySource {
   city: string;
   bbox: [number, number, number, number];
-  boundary: { select: string };
+  boundary: { select: string; osm?: string };
   majorParks: { minAreaHa: number };
   places: PlaceSource[];
 }
@@ -228,16 +230,22 @@ function writeJson(path: string, data: unknown) {
 // ---------------------------------------------------------------- main
 
 async function main() {
-  const src: CitySource = JSON.parse(readFileSync(join(ROOT, "scripts/sources/caba.places.json"), "utf8"));
+  const src: CitySource = JSON.parse(readFileSync(join(ROOT, `scripts/sources/${CITY}.places.json`), "utf8"));
   const bb = bboxFilter(src.bbox);
   const outDir = join(ROOT, "public/data/cities", src.city);
   const report: string[] = [`# Datos de ${src.city}`, "", "Generado por `npm run data`. Revisar los valores marcados.", ""];
 
   // Boundary ------------------------------------------------------------
   console.log("Boundary");
-  const bIds = await overpass(`${header()}${src.boundary.select}${bb};out ids;`);
-  if (bIds.elements.length !== 1) throw new Error(`Boundary: expected 1 element, got ${bIds.elements.length}`);
-  const bRef = `relation/${bIds.elements[0].id}`;
+  let bRef = src.boundary.osm;
+  if (!bRef) {
+    const bIds = await overpass(`${header()}${src.boundary.select}${bb};out ids tags;`);
+    if (bIds.elements.length !== 1) {
+      const list = bIds.elements.map((e) => `relation/${e.id} ${e.tags?.name ?? ""} (admin_level ${e.tags?.admin_level ?? "?"})`).join("\n  ");
+      throw new Error(`Boundary: expected 1 element, got ${bIds.elements.length}; pin one with boundary.osm:\n  ${list}`);
+    }
+    bRef = `relation/${bIds.elements[0].id}`;
+  }
   const boundary = (await geometryOf(bRef)).features.find(isArea);
   if (!boundary) throw new Error("Boundary has no area geometry");
   writeJson(join(outDir, "boundary.geojson"), {
