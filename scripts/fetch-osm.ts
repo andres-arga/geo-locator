@@ -15,7 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import osmtogeojson from "osmtogeojson";
 import * as turf from "@turf/turf";
-import type { Feature, FeatureCollection, Geometry, MultiPolygon, Polygon } from "geojson";
+import type { Feature, FeatureCollection, Geometry, MultiPolygon, Point, Polygon } from "geojson";
 import type { Place, PlacesFile, Symmetry } from "../src/cities/placeTypes";
 import { SCORING } from "../src/config/scoring";
 
@@ -229,10 +229,22 @@ async function main() {
       let ref = p.osm ?? `${candidates[0].type}/${candidates[0].id}`;
       if (p.containingBuilding && ref.startsWith("node/")) {
         const nodeId = ref.split("/")[1];
-        const around = (await overpass(`${header()}node(${nodeId});way(around:3)["building"];out ids tags;`)).elements;
-        if (!around.length) throw new Error(`${p.id}: no building around ${ref}`);
-        lines.push(`- Punto \`${ref}\` dentro del edificio \`way/${around[0].id}\`${around.length > 1 ? ` (había ${around.length}, se usó el de menor id)` : ""}`);
-        ref = `way/${around.sort((a, b) => a.id - b.id)[0].id}`;
+        // `around` measures distance to a way's outline, so search a radius and then
+        // keep the building polygon that actually contains the point.
+        const point = (await geometryOf(ref)).features.find((f) => f.geometry.type === "Point");
+        if (!point) throw new Error(`${p.id}: ${ref} has no point geometry`);
+        const near = (await overpass(`${header()}node(${nodeId});way(around:40)["building"];out ids;`)).elements;
+        let found: string | null = null;
+        for (const w of near.sort((a, b) => a.id - b.id)) {
+          const g = (await geometryOf(`way/${w.id}`)).features.find(isArea);
+          if (g && turf.booleanPointInPolygon(point as Feature<Point>, g as Feature<Polygon | MultiPolygon>)) {
+            found = `way/${w.id}`;
+            break;
+          }
+        }
+        if (!found) throw new Error(`${p.id}: no building contains ${ref} (${near.length} nearby)`);
+        lines.push(`- Punto \`${ref}\` dentro del edificio \`${found}\``);
+        ref = found;
       }
       if (candidates.length > 1 || !p.osm) {
         lines.push(`- Candidatos: ${candidates.map((c) => `\`${c.type}/${c.id}\` ${c.tags?.name ?? ""}`).join(" · ")}`);
