@@ -44,6 +44,13 @@ function renderDev() {
     applyLevel(map, { level: options.level, streetNames });
   };
   dev.appendChild(lbl);
+  const size = document.createElement("label");
+  size.innerHTML = `<input type="checkbox" ${options.size ? "checked" : ""}> Tamaño`;
+  size.querySelector("input")!.onchange = (e) => {
+    options.size = (e.target as HTMLInputElement).checked;
+    start();
+  };
+  dev.appendChild(size);
 }
 
 function start() {

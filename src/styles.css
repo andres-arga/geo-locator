@@ -133,3 +133,32 @@ body.dragging, body.dragging * { cursor: grabbing !important; user-select: none;
   .strip li { width: 30px; height: 30px; }
   .strip li img { width: 22px; height: 22px; }
 }
+
+/* ---------- Silhouette piece ---------- */
+.piece-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.piece-badge, .piece-handle { position: absolute; left: 0; top: 0; pointer-events: auto; touch-action: none; }
+.piece-badge {
+  width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--accent); display: grid; place-items: center; cursor: move;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.piece-badge img { width: 24px; height: 24px; pointer-events: none; }
+.piece-handle.corner {
+  width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 3px;
+  background: #fff; border: 2px solid var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+.piece-handle.nw, .piece-handle.se { cursor: nwse-resize; }
+.piece-handle.ne, .piece-handle.sw { cursor: nesw-resize; }
+.piece-overlay.locked .piece-handle { display: none; }
+.piece-overlay.locked .piece-badge { cursor: default; pointer-events: none; }
+@media (pointer: coarse) {
+  /* Bigger touch targets; the visible square stays small. */
+  .piece-handle.corner { width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 6px; }
+}
+
+.size-control { display: flex; flex-direction: column; gap: 4px; }
+.size-control input[type="range"] { width: 100%; accent-color: var(--accent); }
+.size-control .muted { margin: 0; }
+.note { margin: 0; font-size: 13px; color: #6b5a1e; background: #fff7dc; border-radius: 8px; padding: 6px 8px; }
+.result dd.detail { grid-column: 1 / -1; font-size: 12px; color: #6b6455; }
+.sw.mine { background: #5b4a8b; }
