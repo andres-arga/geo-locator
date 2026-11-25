@@ -11,7 +11,7 @@ import { clearResult, createPinElement, PiecePin, showResult } from "../map/over
 import { MAX_DIAMETER_M, MIN_DIAMETER_M, SilhouettePiece } from "../map/piece";
 import { vertices } from "../game/geometry";
 import { enableDrag } from "./dnd";
-import { esc, formatDistance, formatPoints } from "./format";
+import { esc, formatBearing, formatDistance, formatPoints } from "./format";
 
 /**
  * One game: the panel (pieces, buttons, feedback) and the map interactions.
@@ -42,6 +42,12 @@ export class GameController {
 
   private get silhouetteMode() {
     return this.state.options.size || this.state.options.orientation;
+  }
+
+  /** The current place can be rotated (orientation modifier on and place not excluded). */
+  private get rotatable() {
+    const { place } = currentRound(this.state);
+    return this.state.options.orientation && place.modifiers.orientation && place.facadeBearing !== null;
   }
 
   /** The current place can be resized (size modifier on and footprint not excluded). */
@@ -77,7 +83,9 @@ export class GameController {
     } else {
       // Neutral starting size that does not depend on the real one; excluded places use their real size.
       const sizeRatio = this.resizable ? neutralDiameter() / place.eqDiameterM : 1;
-      this.state = placePiece(this.state, { center, sizeRatio, bearing: place.facadeBearing ?? 0 });
+      // Random starting bearing so the drop does not give the answer away.
+      const bearing = this.rotatable ? Math.floor(Math.random() * 360) : (place.facadeBearing ?? 0);
+      this.state = placePiece(this.state, { center, sizeRatio, bearing });
       this.piece = new SilhouettePiece({
         map: this.map,
         mapEl: this.mapEl,
@@ -85,6 +93,7 @@ export class GameController {
         iconUrl: modelUrl(place.id),
         value: currentRound(this.state).placement!,
         resizable: this.resizable,
+        rotatable: this.rotatable,
         onChange: (v) => {
           this.state = placePiece(this.state, v);
           this.syncSizeControls();
@@ -102,11 +111,23 @@ export class GameController {
     const label = this.panel.querySelector<HTMLElement>("[data-size-label]");
     if (slider && document.activeElement !== slider) slider.value = String(log2Step(d));
     if (label) label.textContent = formatMeters(d);
+    const b = this.piece.getValue().bearing;
+    const rot = this.panel.querySelector<HTMLInputElement>("[data-rot-slider]");
+    const rotLabel = this.panel.querySelector<HTMLElement>("[data-rot-label]");
+    if (rot && document.activeElement !== rot) rot.value = String(Math.round(b) % 360);
+    if (rotLabel) rotLabel.textContent = formatBearing(b);
   }
 
   private key(e: KeyboardEvent) {
-    if (this.state.phase !== "adjusting" || !this.piece || !this.resizable) return;
+    if (this.state.phase !== "adjusting" || !this.piece) return;
     if ((e.target as HTMLElement).closest("input, textarea, select")) return;
+    const turn = e.code === "KeyQ" ? -1 : e.code === "KeyE" ? 1 : 0;
+    if (turn && this.rotatable) {
+      e.preventDefault();
+      this.piece.setBearing(this.piece.getValue().bearing + turn * (e.shiftKey ? 1 : 5));
+      return;
+    }
+    if (!this.resizable) return;
     const step = e.key === "+" || e.key === "=" ? 1 : e.key === "-" || e.key === "_" ? -1 : 0;
     if (!step) return;
     e.preventDefault();
@@ -125,7 +146,7 @@ export class GameController {
     this.pin?.setLocked(true);
     this.piece?.setLocked(true);
     const placed = round.placement!.center;
-    showResult(this.map, round.place, placed);
+    showResult(this.map, round.place, placed, this.state.options.orientation);
     const pts = [placed, round.place.centroid, ...(vertices(round.place.footprint) as [number, number][])];
     if (this.piece) pts.push(...(vertices(this.piece.footprint()) as [number, number][]));
     const [w, s, e, n] = bounds(pts);
@@ -189,6 +210,7 @@ export class GameController {
       return `${card}
         <p class="hint">${this.silhouetteMode ? "Arrastrá la silueta para moverla." : "Podés mover el marcador en el mapa hasta confirmar."}</p>
         ${this.sizeControls()}
+        ${this.rotationControls()}
         <button class="btn primary" data-action="confirm">Confirmar</button>`;
     }
     // result
@@ -198,6 +220,7 @@ export class GameController {
         <dt>Distancia</dt><dd>${formatDistance(score!.distanceM)}</dd>
         <dt>Posición</dt><dd>${formatPoints(score!.position.points)} / ${formatPoints(score!.position.max)}</dd>
         ${this.sizeResult()}
+        ${this.orientationResult()}
         <dt>Total ronda</dt><dd><strong>${formatPoints(score!.total)}</strong></dd>
       </dl>
       <p class="legend"><span class="sw real"></span> ubicación real · ${this.piece ? '<span class="sw mine"></span> tu pieza · ' : ""}<span class="sw err"></span> distancia</p>
@@ -217,6 +240,30 @@ export class GameController {
       </div>`;
   }
 
+  private rotationControls(): string {
+    if (!this.state.options.orientation) return "";
+    if (!this.rotatable) {
+      return `<p class="note">Este lugar no puntúa orientación: tiene simetría radial. Ese componente se calcula con tu puntaje de posición.</p>`;
+    }
+    const b = this.piece?.getValue().bearing ?? 0;
+    return `<div class="size-control">
+        <label for="rot-slider">Fachada mirando hacia: <strong data-rot-label>${formatBearing(b)}</strong></label>
+        <input id="rot-slider" type="range" data-rot-slider min="0" max="359" step="1" value="${Math.round(b) % 360}">
+        <p class="muted">Girá con la manija redonda de la flecha, teclas Q / E (Shift = fino) o dos dedos en el celular.</p>
+      </div>`;
+  }
+
+  private orientationResult(): string {
+    const { score, placement, place } = currentRound(this.state);
+    if (!score?.orientation) return "";
+    if (score.orientation.compensated) {
+      return `<dt>Orientación</dt><dd>${formatPoints(score.orientation.points)} / ${formatPoints(score.orientation.max)} <span class="muted">(compensado)</span></dd>`;
+    }
+    const sym = place.symmetry === 2 || place.symmetry === 4 ? ` · simetría ${place.symmetry}` : "";
+    return `<dt>Orientación</dt><dd>error ${Math.round(score.orientation.errorDeg!)}° · ${formatPoints(score.orientation.points)} / ${formatPoints(score.orientation.max)}</dd>
+      <dd class="detail">tu fachada ${formatBearing(placement!.bearing)} · real ${formatBearing(place.facadeBearing!)}${sym}</dd>`;
+  }
+
   private sizeResult(): string {
     const { score, placement, place } = currentRound(this.state);
     if (!score?.size) return "";
@@ -232,6 +279,8 @@ export class GameController {
   private bind() {
     const slider = this.panel.querySelector<HTMLInputElement>("[data-size-slider]");
     slider?.addEventListener("input", () => this.piece?.setDiameter(Math.pow(2, Number(slider.value))));
+    const rot = this.panel.querySelector<HTMLInputElement>("[data-rot-slider]");
+    rot?.addEventListener("input", () => this.piece?.setBearing(Number(rot.value)));
 
     const on = (action: string, fn: () => void) =>
       this.panel.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)?.addEventListener("click", fn);

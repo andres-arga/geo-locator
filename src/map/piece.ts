@@ -2,6 +2,7 @@ import type { GeoJSONSource, Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import type { Place } from "../cities/placeTypes";
 import { transformFootprint, vertices } from "../game/geometry";
+import { formatBearing } from "../ui/format";
 
 /** Player-chosen equivalent diameter limits (metres). Wide enough for any CABA place. */
 export const MIN_DIAMETER_M = 10;
@@ -22,6 +23,8 @@ export interface PieceOptions {
   iconUrl: string | undefined;
   value: PieceValue;
   resizable: boolean;
+  /** Orientation modifier: show the facade arrow with a rotation knob. */
+  rotatable: boolean;
   onChange: (v: PieceValue) => void;
 }
 
@@ -47,6 +50,10 @@ export class SilhouettePiece {
   private pointers = new Map<number, { x: number; y: number }>();
   private gestureStart: { value: PieceValue; pts: Map<number, { x: number; y: number }> } | null = null;
   private cornerDrag: { id: number; startDist: number; startDiameter: number } | null = null;
+  private rotateDrag: { id: number; offset: number } | null = null;
+  private arrow: HTMLElement | null = null;
+  private knob: HTMLElement | null = null;
+  private bearingTag: HTMLElement | null = null;
   private readonly off: (() => void)[] = [];
 
   constructor(private o: PieceOptions) {
@@ -74,6 +81,19 @@ export class SilhouettePiece {
         this.overlay.appendChild(h);
         this.listen(h, "pointerdown", (e) => this.cornerDown(e as PointerEvent));
       }
+    }
+    if (o.rotatable) {
+      // Facade arrow from the centre; its round tip is the rotation handle.
+      this.arrow = document.createElement("div");
+      this.arrow.className = "piece-arrow";
+      this.knob = document.createElement("div");
+      this.knob.className = "piece-handle rotate";
+      this.knob.title = "Girar";
+      this.bearingTag = document.createElement("div");
+      this.bearingTag.className = "piece-bearing";
+      this.overlay.prepend(this.arrow);
+      this.overlay.append(this.knob, this.bearingTag);
+      this.listen(this.knob, "pointerdown", (e) => this.rotateDown(e as PointerEvent));
     }
     o.mapEl.appendChild(this.overlay);
 
@@ -108,6 +128,11 @@ export class SilhouettePiece {
     this.update({ sizeRatio: d / this.o.place.eqDiameterM });
   }
 
+  /** Set the facade bearing in degrees (slider, keyboard). */
+  setBearing(deg: number) {
+    this.update({ bearing: norm360(deg) });
+  }
+
   setLocked(locked: boolean) {
     this.locked = locked;
     this.overlay.classList.toggle("locked", locked);
@@ -129,9 +154,14 @@ export class SilhouettePiece {
 
   // ------------------------------------------------------------ internals
 
+  /**
+   * The silhouette is the real footprint turned by (player bearing - real facade
+   * bearing): when the player's arrow matches the real facade, the shape is in its
+   * real orientation. Without the modifier the bearing equals the real one.
+   */
   private rotation(): number {
-    // Phase 5 rotates the silhouette by (player bearing - real facade bearing).
-    return 0;
+    if (!this.o.rotatable) return 0;
+    return this.value.bearing - (this.o.place.facadeBearing ?? this.value.bearing);
   }
 
   private update(patch: Partial<PieceValue>) {
@@ -158,6 +188,18 @@ export class SilhouettePiece {
     this.corners.forEach((h, i) => {
       h.style.transform = `translate(${c.x + offsets[i][0] * half}px, ${c.y + offsets[i][1] * half}px)`;
     });
+    if (this.arrow && this.knob && this.bearingTag) {
+      // Map is always north-up, so the screen angle equals the compass bearing.
+      const b = this.value.bearing;
+      const r = Math.max(72, half + 26);
+      const dx = Math.sin((b * Math.PI) / 180), dy = -Math.cos((b * Math.PI) / 180);
+      this.arrow.style.width = `${r}px`;
+      this.arrow.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${b - 90}deg)`;
+      this.knob.style.transform = `translate(${c.x + dx * r}px, ${c.y + dy * r}px)`;
+      // Label beyond the knob, along the arrow, so it never covers it.
+      this.bearingTag.style.transform = `translate(${c.x + dx * (r + 34)}px, ${c.y + dy * (r + 22)}px)`;
+      this.bearingTag.textContent = formatBearing(b);
+    }
   }
 
   private hit(x: number, y: number): boolean {
@@ -207,6 +249,7 @@ export class SilhouettePiece {
 
   private move(e: PointerEvent) {
     if (this.cornerDrag && e.pointerId === this.cornerDrag.id) return this.cornerMove(e);
+    if (this.rotateDrag && e.pointerId === this.rotateDrag.id) return this.rotateMove(e);
     if (!this.pointers.has(e.pointerId) || !this.gestureStart) return;
     this.pointers.set(e.pointerId, this.local(e));
     const { map } = this.o;
@@ -222,6 +265,11 @@ export class SilhouettePiece {
     const c0 = map.project(start.value.center);
     const ll = map.unproject([c0.x + m1.x - m0.x, c0.y + m1.y - m0.y]);
     const patch: Partial<PieceValue> = { center: [ll.lng, ll.lat] };
+    if (ids.length >= 2 && this.o.rotatable) {
+      // Two-finger twist: screen y points down, so atan2 grows clockwise like a bearing.
+      const ang = (a: { x: number; y: number }, b: { x: number; y: number }) => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+      patch.bearing = norm360(start.value.bearing + ang(now[0], now[1]) - ang(then[0], then[1]));
+    }
     if (ids.length >= 2 && this.o.resizable) {
       const d = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
       const ratio = d(now[0], now[1]) / Math.max(1, d(then[0], then[1]));
@@ -232,6 +280,11 @@ export class SilhouettePiece {
   }
 
   private up(e: PointerEvent) {
+    if (this.rotateDrag && e.pointerId === this.rotateDrag.id) {
+      this.rotateDrag = null;
+      this.resumeMap();
+      return;
+    }
     if (this.cornerDrag && e.pointerId === this.cornerDrag.id) {
       this.cornerDrag = null;
       this.resumeMap();
@@ -265,6 +318,25 @@ export class SilhouettePiece {
     this.setDiameter(drag.startDiameter * (dist / drag.startDist));
   }
 
+  private pointerBearing(e: PointerEvent): number {
+    const p = this.local(e);
+    const c = this.o.map.project(this.value.center);
+    return (Math.atan2(p.x - c.x, -(p.y - c.y)) * 180) / Math.PI;
+  }
+
+  private rotateDown(e: PointerEvent) {
+    if (this.locked) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.suspendMap();
+    // Keep the grab offset so the arrow does not jump to the pointer.
+    this.rotateDrag = { id: e.pointerId, offset: this.value.bearing - this.pointerBearing(e) };
+  }
+
+  private rotateMove(e: PointerEvent) {
+    this.setBearing(this.pointerBearing(e) + this.rotateDrag!.offset);
+  }
+
   /** Alt + wheel over the piece resizes it; a plain wheel keeps zooming the map. */
   private wheel(e: WheelEvent) {
     if (this.locked || !this.o.resizable || !e.altKey) return;
@@ -279,6 +351,10 @@ export class SilhouettePiece {
     t.addEventListener(type, fn, { capture, passive: false });
     this.off.push(() => t.removeEventListener(type, fn, { capture }));
   }
+}
+
+function norm360(d: number): number {
+  return ((d % 360) + 360) % 360;
 }
 
 function clamp(x: number, lo: number, hi: number) {

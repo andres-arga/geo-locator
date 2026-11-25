@@ -37,7 +37,7 @@ function start() {
 
 const menu = createMenu({
   current: () => settings,
-  orientationAvailable: false, // phase 5
+  orientationAvailable: true,
   onApply: (s) => {
     settings = s;
     applyLevel(map, { level: s.level, streetNames: s.streetNames });

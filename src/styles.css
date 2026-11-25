@@ -181,3 +181,30 @@ dialog.menu::backdrop { background: rgba(30, 25, 45, .45); }
   .panel-game { padding: 10px 12px; gap: 8px; }
   .panel-foot { padding: 6px 12px; }
 }
+
+/* ---------- Orientation: facade arrow + rotation knob ---------- */
+.piece-arrow {
+  position: absolute; left: 0; top: 0; height: 3px; margin-top: -1.5px;
+  background: #c0392b; transform-origin: 0 50%; pointer-events: none; border-radius: 2px;
+}
+.piece-arrow::after {
+  content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  border: 7px solid transparent; border-left: 11px solid #c0392b; border-right: 0;
+}
+.piece-handle.rotate {
+  width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  background: #fff; border: 3px solid #c0392b; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+.piece-handle.rotate:active { cursor: grabbing; }
+.piece-bearing {
+  position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none;
+  translate: -50% -50%; white-space: nowrap; font-size: 12px; font-weight: 700; color: #7a1f14;
+  background: rgba(255,255,255,.9); padding: 1px 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.piece-overlay.locked .piece-bearing { display: none; }
+/* On the result the player's arrow stays, in the piece colour, next to the real (green) one. */
+.piece-overlay.locked .piece-arrow { background: var(--accent); }
+.piece-overlay.locked .piece-arrow::after { border-left-color: var(--accent); }
+@media (pointer: coarse) {
+  .piece-handle.rotate { width: 32px; height: 32px; margin: -16px 0 0 -16px; }
+}
