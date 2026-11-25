@@ -1,4 +1,4 @@
-import { mountSettingsForm, type PlaceCounts, type Settings } from "./menu";
+import { mountSettingsForm, type BestLookup, type PlaceCounts, type Settings } from "./menu";
 
 export interface StartScreen {
   show: (current: Settings) => void;
@@ -8,7 +8,12 @@ export interface StartScreen {
 }
 
 /** Welcome screen over the (blurred) map: what the game is, first options, start. */
-export function createStartScreen(parent: HTMLElement, cityName: string, onStart: (s: Settings) => void): StartScreen {
+export function createStartScreen(
+  parent: HTMLElement,
+  cityName: string,
+  onStart: (s: Settings) => void,
+  best: BestLookup,
+): StartScreen {
   const el = document.createElement("div");
   el.className = "start";
   el.setAttribute("role", "dialog");
@@ -37,7 +42,7 @@ export function createStartScreen(parent: HTMLElement, cityName: string, onStart
           <div class="settings"></div>
           <button class="btn primary start-btn" data-start ${counts ? "" : "disabled"}>${counts ? "Empezar" : "Cargando mapa…"}</button>
         </div>`;
-      mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s));
+      mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s), best);
       button().addEventListener("click", () => onStart({ ...draft }));
       el.hidden = false;
       document.body.classList.add("on-start");
@@ -51,7 +56,7 @@ export function createStartScreen(parent: HTMLElement, cityName: string, onStart
       counts = c;
       // Re-render the form with the counts, keeping the current draft.
       if (!el.hidden && el.querySelector(".settings")) {
-        mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s));
+        mountSettingsForm(el.querySelector(".settings")!, draft, counts, (s) => (draft = s), best);
       }
       const b = el.querySelector<HTMLButtonElement>("[data-start]");
       if (!b) return;

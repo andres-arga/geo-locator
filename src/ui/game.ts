@@ -12,6 +12,7 @@ import { MAX_DIAMETER_M, MIN_DIAMETER_M, SilhouettePiece } from "../map/piece";
 import { transformFootprint, vertices } from "../game/geometry";
 import { enableDrag } from "./dnd";
 import { esc, formatBearing, formatDistance, formatPoints } from "./format";
+import { recordScore, type BestScore } from "../game/records";
 
 /**
  * One game: the panel (pieces, buttons, feedback) and the map interactions.
@@ -23,6 +24,7 @@ export class GameController {
   private pin: PiecePin | null = null;
   private piece: SilhouettePiece | null = null;
   private offKeys: (() => void) | null = null;
+  private recordResult: { previous: BestScore | null; isRecord: boolean } | null = null;
   private disposeDrag: (() => void) | null = null;
 
   constructor(
@@ -32,6 +34,8 @@ export class GameController {
     private city: CityConfig,
     places: Place[],
     options: GameOptions,
+    /** localStorage key for the best score of this options combination. */
+    private recordKey?: string,
   ) {
     this.state = newGame(places, options);
     const keys = (e: KeyboardEvent) => this.key(e);
@@ -160,6 +164,10 @@ export class GameController {
     this.removePiece();
     clearResult(this.map);
     if (this.state.phase === "finished") {
+      if (this.recordKey) {
+        const max = maxPointsPerGame(this.state.options, this.state.rounds.length);
+        this.recordResult = recordScore(this.recordKey, totalScore(this.state), max);
+      }
       this.render();
       this.review(null);
       return;
@@ -275,6 +283,7 @@ export class GameController {
     const compensated = s.rounds.some((r) => r.score!.size?.compensated || r.score!.orientation?.compensated);
     return `<p class="total">Total: <strong>${formatPoints(totalScore(s))}</strong> pts
         <span class="muted">de ${formatPoints(maxPointsPerGame(o, s.rounds.length))}${mult === 1 ? "" : ` · incluye ×${String(mult).replace(".", ",")}`}</span></p>
+      ${this.recordLine()}
       <ol class="summary-list">${rows}</ol>
       <p class="muted">Tocá un lugar para verlo en el mapa.${compensated ? " * componente compensado con la posición." : ""}</p>
       <p class="legend"><span class="sw real"></span> real · <span class="sw mine"></span> tu ubicación · <span class="sw err"></span> distancia</p>
@@ -282,6 +291,15 @@ export class GameController {
         <button class="btn" data-action="review-all">Ver todos</button>
         <button class="btn primary" data-action="restart">Jugar de nuevo</button>
       </div>`;
+  }
+
+  private recordLine(): string {
+    const r = this.recordResult;
+    if (!r) return "";
+    if (r.isRecord) {
+      return `<p class="record new">🏆 ¡Nuevo récord con estas opciones!${r.previous ? ` <span class="muted">Antes: ${formatPoints(r.previous.score)} pts</span>` : ""}</p>`;
+    }
+    return r.previous ? `<p class="record">Tu récord con estas opciones: <strong>${formatPoints(r.previous.score)}</strong> pts</p>` : "";
   }
 
   private sizeControls(): string {

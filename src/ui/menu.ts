@@ -1,6 +1,10 @@
 import { MAP_LEVELS, ROUNDS_PER_GAME, type MapLevel } from "../config/game";
 import { maxPointsPerGame, type GameOptions } from "../game/scoring";
 import type { PlaceSet } from "../game/state";
+import type { BestScore } from "../game/records";
+
+/** Looks up the best score for a set of options (null = none yet). */
+export type BestLookup = (s: Settings) => BestScore | null;
 import { formatPoints } from "./format";
 
 /** Everything the menu controls. Street names only matter on the easy level. */
@@ -69,7 +73,13 @@ const SETS: { id: PlaceSet; label: string; help: string }[] = [
   { id: "landmarks", label: "Lugares icónicos", help: "Todo menos los estadios." },
 ];
 
-export function mountSettingsForm(root: HTMLElement, initial: Settings, counts: PlaceCounts, onChange: (s: Settings) => void) {
+export function mountSettingsForm(
+  root: HTMLElement,
+  initial: Settings,
+  counts: PlaceCounts,
+  onChange: (s: Settings) => void,
+  best?: BestLookup,
+) {
   let draft = { ...initial };
   const render = (focusName?: string, focusValue?: string) => {
     const levels = (Object.entries(MAP_LEVELS) as [MapLevel, { label: string; multiplier: number }][])
@@ -79,6 +89,7 @@ export function mountSettingsForm(root: HTMLElement, initial: Settings, counts: 
     const sets = SETS.map((o) => `<label class="choice"><input type="radio" name="placeSet" value="${o.id}" ${draft.placeSet === o.id ? "checked" : ""}>
           <span><strong>${o.label}</strong>${counts ? ` <span class="muted">(${counts[o.id]})</span>` : ""}<br><span class="muted">${o.help}</span></span></label>`).join("");
     const rounds = roundsFor(draft, counts);
+    const record = best?.(draft);
     root.innerHTML = `
       <fieldset><legend>Lugares</legend>${sets}</fieldset>
       <fieldset><legend>Dificultad del mapa</legend>${levels}
@@ -90,7 +101,10 @@ export function mountSettingsForm(root: HTMLElement, initial: Settings, counts: 
         <label class="toggle"><input type="checkbox" name="orientation" ${draft.orientation ? "checked" : ""}> Acertar orientación <span class="muted">+400 pts por lugar</span></label>
       </fieldset>
       <p class="menu-max">Puntaje máximo: <strong>${formatPoints(maxPointsPerGame(draft, rounds))}</strong> pts
-        <span class="muted">(${rounds} lugares por partida)</span></p>`;
+        <span class="muted">(${rounds} lugares por partida)</span></p>
+      <p class="menu-best">${record
+        ? `🏆 Tu récord con estas opciones: <strong>${formatPoints(record.score)}</strong> pts <span class="muted">(${new Date(record.date).toLocaleDateString("es-AR")})</span>`
+        : `<span class="muted">Todavía no tenés récord con estas opciones.</span>`}</p>`;
     root.querySelectorAll<HTMLInputElement>("input").forEach((input) =>
       input.addEventListener("change", () => {
         if (input.name === "level") draft = { ...draft, level: input.value as MapLevel };
@@ -112,6 +126,7 @@ export function mountSettingsForm(root: HTMLElement, initial: Settings, counts: 
 export interface MenuOptions {
   current: () => Settings;
   counts: () => PlaceCounts;
+  best: BestLookup;
   /** Called only after the player confirms "Aplicar y reiniciar juego". */
   onApply: (s: Settings) => void;
   /** "Volver al inicio" link. */
@@ -162,7 +177,7 @@ export function createMenu(o: MenuOptions): { open: () => void } {
       mountSettingsForm(dlg.querySelector(".settings")!, draft, o.counts(), (s) => {
         draft = s;
         renderActions();
-      });
+      }, o.best);
       renderActions();
       dlg.showModal();
     },

@@ -7,6 +7,7 @@ import { addResultLayers, addReviewLayers } from "./map/overlays";
 import { GameController } from "./ui/game";
 import { createMenu, loadSettings, saveSettings, type PlaceCounts, type Settings } from "./ui/menu";
 import { countBySet, filterPlaces } from "./game/state";
+import { getBest, recordKey } from "./game/records";
 import { createStartScreen } from "./ui/start";
 
 const app = document.getElementById("app")!;
@@ -35,7 +36,7 @@ function start() {
   game?.destroy();
   map.jumpTo({ center: city.center, zoom: city.zoom });
   const { level, size, orientation } = settings;
-  game = new GameController(map, mapEl, gameEl, city, filterPlaces(places, settings.placeSet), { level, size, orientation });
+  game = new GameController(map, mapEl, gameEl, city, filterPlaces(places, settings.placeSet), { level, size, orientation }, recordKey(city.id, settings));
 }
 
 function useSettings(s: Settings) {
@@ -44,11 +45,13 @@ function useSettings(s: Settings) {
   applyLevel(map, { level: s.level, streetNames: s.streetNames });
 }
 
+const best = (s: Settings) => getBest(recordKey(city.id, s));
+
 const startScreen = createStartScreen(app, city.name, (s) => {
   useSettings(s);
   startScreen.hide();
   start();
-});
+}, best);
 
 function goHome() {
   game?.destroy();
@@ -60,6 +63,7 @@ function goHome() {
 const menu = createMenu({
   current: () => settings,
   counts: () => counts,
+  best,
   onApply: (s) => {
     useSettings(s);
     start();

@@ -244,3 +244,9 @@ body.on-start .panel { visibility: hidden; }
 .row-detail { color: #6b6455; font-size: 12px; margin: 2px 0 0 24px; }
 .summary-actions { display: flex; gap: 8px; }
 .summary-actions .btn { flex: 1; }
+
+/* ---------- Records ---------- */
+.menu-best { margin: 0; font-size: 14px; }
+.record { margin: 0; font-size: 14px; padding: 8px 10px; border-radius: 10px; background: #f6f2ff; }
+.record.new { background: #fff4d6; color: #6b4b00; font-weight: 600; }
+.record.new .muted { font-weight: 400; }
