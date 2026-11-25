@@ -17,14 +17,14 @@
     { "id": "monumental", "name": "Estadio Monumental (River Plate)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2 },
     { "id": "barolo", "name": "Palacio Barolo", "select": "nwr[\"name\"=\"Palacio Barolo\"]", "symmetry": 1, "facadeHint": 0 },
     { "id": "torre-monumental", "name": "Torre Monumental (ex Torre de los Ingleses)", "select": "nwr[\"name\"~\"Torre Monumental|Torre de los Ingleses\"]", "symmetry": 4 },
-    { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1},
-    { "id": "galerias-pacifico", "name": "Galerías Pacífico", "select": "nwr[\"name\"~\"Galer[ií]as Pac[ií]fico\"]", "symmetry": 1},
-    { "id": "aguas-corrientes", "name": "Palacio de Aguas Corrientes", "select": "nwr[\"name\"~\"Palacio de (las )?Aguas Corrientes\"]", "symmetry": 1},
-    { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1},
-    { "id": "movistar-arena", "name": "Movistar Arena", "select": "nwr[\"name\"~\"Movistar Arena\"]", "symmetry": 1},
-    { "id": "gasometro", "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bidegain|Gas[oó]metro\"]", "symmetry": 2},
-    { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2},
-    { "id": "duco", "name": "Estadio Tomás Adolfo Ducó (Huracán)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Duc[oó]\"]", "symmetry": 2},
-    { "id": "maradona", "name": "Estadio Diego Armando Maradona (Argentinos Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Diego Armando Maradona\"]", "symmetry": 2}
+    { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1, "containingBuilding": true },
+    { "id": "galerias-pacifico", "name": "Galerías Pacífico", "select": "nwr[\"name\"~\"Galer[ií]as Pac[ií]fico\"]", "symmetry": 1 },
+    { "id": "aguas-corrientes", "name": "Palacio de Aguas Corrientes", "select": "nwr[\"name\"~\"Palacio de (las )?Aguas Corrientes\"]", "symmetry": 1 },
+    { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1 },
+    { "id": "movistar-arena", "name": "Movistar Arena", "select": "nwr[\"name\"~\"Movistar Arena\"]", "symmetry": 1 },
+    { "id": "gasometro", "name": "Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Bidegain|Gas[oó]metro\"]", "symmetry": 2 },
+    { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2 },
+    { "id": "duco", "name": "Estadio Tomás Adolfo Ducó (Huracán)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Duc[oó]\"]", "symmetry": 2 },
+    { "id": "maradona", "name": "Estadio Diego Armando Maradona (Argentinos Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Diego Armando Maradona\"]", "symmetry": 2 }
   ]
 }
