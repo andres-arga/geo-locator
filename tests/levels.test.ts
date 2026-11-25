@@ -8,8 +8,27 @@ const visibleIds = (level: "easy" | "medium" | "hard", streetNames = false) =>
   style.layers.filter((l) => isLayerVisible(l.metadata, { level, streetNames })).map((l) => l.id);
 
 describe("map levels", () => {
-  it("hard shows only the background and the city outline", () => {
-    expect(visibleIds("hard")).toEqual(["background", "city-boundary"]);
+  it("hard blanks the whole city with a mask drawn above every map layer", () => {
+    const ids = visibleIds("hard");
+    // Outskirts keep context...
+    expect(ids).toEqual(expect.arrayContaining(["earth", "water", "roads-highway", "roads-major", "rail"]));
+    // ...but nothing of the street detail, and no labels.
+    expect(ids).not.toContain("roads-minor");
+    expect(ids).not.toContain("roads-secondary");
+    expect(ids).not.toContain("street-names");
+    // The mask sits above all the base layers and right below the city outline.
+    const all = style.layers.map((l) => l.id);
+    const mask = all.indexOf("city-mask");
+    expect(mask).toBeGreaterThan(-1);
+    for (const id of ids.filter((x) => x !== "city-mask" && x !== "city-boundary")) {
+      expect(all.indexOf(id)).toBeLessThan(mask);
+    }
+    expect(all.indexOf("city-boundary")).toBe(mask + 1);
+  });
+
+  it("the city mask is only used in hard", () => {
+    expect(visibleIds("easy", true)).not.toContain("city-mask");
+    expect(visibleIds("medium")).not.toContain("city-mask");
   });
 
   it("medium shows main roads, water, big parks and outline, without labels or minor streets", () => {

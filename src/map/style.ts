@@ -26,6 +26,7 @@ export const COLORS = {
   highwayCasing: "#c98a2e",
   rail: "#8f8a80",
   boundary: "#5b4a8b",
+  cityBlank: "#ffffff",
   label: "#5a5448",
 };
 
@@ -34,7 +35,7 @@ type GeoLayer = LayerSpecification & { metadata: GeoMeta };
 
 const ALL: MapLevel[] = ["easy", "medium", "hard"];
 const EASY: MapLevel[] = ["easy"];
-const EASY_MEDIUM: MapLevel[] = ["easy", "medium"];
+const EASY_HARD: MapLevel[] = ["easy", "hard"];
 
 // No "grass": stadium pitches are often tagged landuse=grass and would reveal them.
 const GREEN_KINDS = [
@@ -69,7 +70,7 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       source: "osm",
       "source-layer": "earth",
       paint: { "fill-color": COLORS.earth },
-      metadata: meta(EASY_MEDIUM),
+      metadata: meta(ALL),
     },
     {
       id: "landuse-green",
@@ -78,7 +79,7 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       "source-layer": "landuse",
       filter: ["in", ["get", "kind"], ["literal", GREEN_KINDS]],
       paint: { "fill-color": COLORS.green },
-      metadata: meta(EASY),
+      metadata: meta(EASY_HARD),
     },
     {
       id: "major-parks",
@@ -99,7 +100,7 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
         ["in", ["get", "kind"], ["literal", ["water", "ocean", "lake", "river"]]],
       ],
       paint: { "fill-color": COLORS.water },
-      metadata: meta(EASY_MEDIUM),
+      metadata: meta(ALL),
     },
     roadLine("roads-minor-casing", MINOR, COLORS.minorCasing, [[12.5, 0.5], [17, 9]], EASY, 12.5),
     roadLine("roads-minor", MINOR, COLORS.minor, [[12.5, 0.3], [17, 7]], EASY, 12.5),
@@ -115,14 +116,23 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
         "line-width": ["interpolate", ["linear"], ["zoom"], 11, 0.6, 17, 2],
         "line-dasharray": [3, 2],
       },
-      metadata: meta(EASY),
+      metadata: meta(EASY_HARD),
     },
     roadLine("roads-secondary-casing", SECONDARY, COLORS.majorCasing, [[11, 0.6], [17, 12]], EASY),
     roadLine("roads-secondary", SECONDARY, COLORS.major, [[11, 0.4], [17, 9.5]], EASY),
-    roadLine("roads-major-casing", AVENUES, COLORS.majorCasing, [[11, 0.9], [17, 15]], EASY_MEDIUM),
-    roadLine("roads-major", AVENUES, COLORS.major, [[11, 0.6], [17, 12]], EASY_MEDIUM),
-    roadLine("roads-highway-casing", HIGHWAYS, COLORS.highwayCasing, [[10, 1.2], [17, 17]], EASY_MEDIUM),
-    roadLine("roads-highway", HIGHWAYS, COLORS.highway, [[10, 0.8], [17, 13]], EASY_MEDIUM),
+    roadLine("roads-major-casing", AVENUES, COLORS.majorCasing, [[11, 0.9], [17, 15]], ALL),
+    roadLine("roads-major", AVENUES, COLORS.major, [[11, 0.6], [17, 12]], ALL),
+    roadLine("roads-highway-casing", HIGHWAYS, COLORS.highwayCasing, [[10, 1.2], [17, 17]], ALL),
+    roadLine("roads-highway", HIGHWAYS, COLORS.highway, [[10, 0.8], [17, 13]], ALL),
+    {
+      // Hard level: the outskirts keep land, water, greens, main roads and rail for
+      // context, and this mask blanks out the whole city territory above them.
+      id: "city-mask",
+      type: "fill",
+      source: "boundary",
+      paint: { "fill-color": COLORS.cityBlank },
+      metadata: meta(["hard"]),
+    },
     {
       id: "city-boundary",
       type: "line",
