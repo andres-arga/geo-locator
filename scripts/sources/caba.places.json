@@ -26,9 +26,9 @@
     { "id": "amalfitani", "name": "Estadio José Amalfitani (Vélez Sarsfield)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Amalfitani\"]", "symmetry": 2, "category": "stadium" },
     { "id": "duco", "name": "Estadio Tomás Adolfo Ducó (Huracán)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Duc[oó]\"]", "symmetry": 2, "category": "stadium" },
     { "id": "maradona", "name": "Estadio Diego Armando Maradona (Argentinos Juniors)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Diego Armando Maradona\"]", "symmetry": 2, "category": "stadium" },
-    { "id": "luna-park", "name": "Luna Park", "select": "nwr[\"name\"~\"Luna Park\"]", "symmetry": 1, "osm": "way/30755463" },
-    { "id": "derecho-uba", "name": "Facultad de Derecho (UBA)", "select": "nwr[\"name\"~\"^Facultad de Derecho\"][\"building\"]", "symmetry": 1 },
-    { "id": "cck", "name": "Palacio Libertad (ex Centro Cultural Kirchner)", "select": "nwr[\"name\"~\"Centro Cultural Kirchner|Palacio Libertad|Palacio de Correos\"]", "symmetry": 1 },
+    { "id": "luna-park", "name": "Luna Park", "select": "nwr[\"name\"~\"Luna Park\"]", "symmetry": 1, "osm": "way/30755463", "facadeHint": 270 },
+    { "id": "derecho-uba", "name": "Facultad de Derecho (UBA)", "select": "nwr[\"name\"~\"^Facultad de Derecho\"][\"building\"]", "symmetry": 1, "facadeHint": 225 },
+    { "id": "cck", "name": "Palacio Libertad (ex Centro Cultural Kirchner)", "select": "nwr[\"name\"~\"Centro Cultural Kirchner|Palacio Libertad|Palacio de Correos\"]", "symmetry": 1, "facadeHint": 180 },
     { "id": "hipodromo-palermo", "name": "Hipódromo de Palermo", "select": "nwr[\"name\"~\"Hip[oó]dromo\"][\"name\"~\"Palermo\"]", "symmetry": 2 }
   ]
 }

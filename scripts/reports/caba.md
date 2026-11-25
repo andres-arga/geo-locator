@@ -155,6 +155,34 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Diámetro equivalente: 111.1 m · simetría 2
 - Modificadores: tamaño ✔ · orientación ✔
 
+### Luna Park (`luna-park`)
+- Candidatos: `relation/18146044` Luna Park · `way/30755463` Stadium Luna Park · `node/12240495159` Luna Park · `node/12240495160` Luna Park · `node/12240495161` Luna Park · `node/12240495162` Luna Park
+- Elemento usado: `way/30755463` (fijado)
+- Rumbo: 264° manual ⚠️ revisar (pista 270° ajustada a la pared real más cercana, de 90 m)
+- Diámetro equivalente: 75.3 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✔
+
+### Facultad de Derecho (UBA) (`derecho-uba`)
+- Candidatos: `relation/18164209` Facultad de Derecho
+- Elemento usado: `relation/18164209` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 209° manual ⚠️ revisar (pista 225° ajustada a la pared real más cercana, de 72 m)
+- Diámetro equivalente: 106.7 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✔
+
+### Palacio Libertad (ex Centro Cultural Kirchner) (`cck`)
+- Candidatos: `way/17444532` Palacio Libertad - Domingo F. Sarmiento
+- Elemento usado: `way/17444532` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 176° manual ⚠️ revisar (pista 180° ajustada a la pared real más cercana, de 24 m)
+- Diámetro equivalente: 93.3 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✔
+
+### Hipódromo de Palermo (`hipodromo-palermo`)
+- Candidatos: `way/18772836` Hipódromo Argentino de Palermo · `node/1316709340` Casino Hipodromo de Palermo · `node/13624444309` 339 - Hipódromo de Palermo
+- Elemento usado: `way/18772836` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 123° calculado (eje largo del rectángulo mínimo; simetría 2)
+- Diámetro equivalente: 754.6 m · simetría 2
+- Modificadores: tamaño ✔ · orientación ✔
+
 ## Capas auxiliares
 
 - Parques grandes (≥ 8 ha): 23
