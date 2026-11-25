@@ -4,6 +4,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   base: process.env.BASE_PATH ?? "/",
   build: {
+    // MapLibre alone is ~800 kB minified; a single app chunk is fine for this site.
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       input: { main: "index.html", debug: "debug.html" },
     },

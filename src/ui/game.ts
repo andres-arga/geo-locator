@@ -140,6 +140,21 @@ export class GameController {
     this.piece.setDiameter(this.piece.diameter() * Math.pow(2, step * (e.shiftKey ? 0.02 : 0.08)));
   }
 
+  /** Keyboard-friendly move: bring the current piece to the map centre, keeping size and bearing. */
+  private recenter() {
+    const c = this.map.getCenter();
+    const center: [number, number] = [c.lng, c.lat];
+    this.state = placePiece(this.state, { center });
+    if (this.pin) {
+      const { place } = currentRound(this.state);
+      this.pin.remove();
+      this.pin = new PiecePin(this.map, modelUrl(place.id), place.name, center, (cc) => {
+        this.state = placePiece(this.state, { center: cc });
+      });
+    }
+    this.piece?.moveTo(center);
+  }
+
   private dropAtCenter() {
     const c = this.map.getCenter();
     this.drop([c.lng, c.lat]);
@@ -155,7 +170,7 @@ export class GameController {
     const pts = [placed, round.place.centroid, ...(vertices(round.place.footprint) as [number, number][])];
     if (this.piece) pts.push(...(vertices(this.piece.footprint()) as [number, number][]));
     const [w, s, e, n] = bounds(pts);
-    this.map.fitBounds([[w, s], [e, n]], { padding: 80, maxZoom: 16.5, duration: 900 });
+    this.map.fitBounds([[w, s], [e, n]], { padding: 80, maxZoom: 16.5, duration: motion(900) });
     this.render();
   }
 
@@ -173,7 +188,7 @@ export class GameController {
       return;
     }
     // Back to the neutral city view so the previous answer does not hint the next one.
-    this.map.easeTo({ center: this.city.center, zoom: this.city.zoom, duration: 700 });
+    this.map.easeTo({ center: this.city.center, zoom: this.city.zoom, duration: motion(700) });
     this.render();
   }
 
@@ -198,7 +213,7 @@ export class GameController {
       ...(it.playerFootprint ? (vertices(it.playerFootprint) as [number, number][]) : []),
     ]);
     const [w, s, e, n] = bounds(pts);
-    this.map.fitBounds([[w, s], [e, n]], { padding: 60, maxZoom: 16.5, duration: 800 });
+    this.map.fitBounds([[w, s], [e, n]], { padding: 60, maxZoom: 16.5, duration: motion(800) });
     this.panel.querySelectorAll<HTMLElement>("[data-review]").forEach((row) =>
       row.classList.toggle("selected", index !== null && Number(row.dataset.review) === index),
     );
@@ -223,8 +238,11 @@ export class GameController {
         })
         .join("")}</ol>`;
 
+    const hadFocus = this.panel.contains(document.activeElement);
     this.panel.innerHTML = header + `<section class="panel-body">${this.body()}</section>`;
     this.bind();
+    // Keep keyboard users in the flow: focus the next primary action.
+    if (hadFocus) this.panel.querySelector<HTMLElement>(".btn.primary, [data-action=\"drop-center\"]")?.focus({ preventScroll: true });
   }
 
   private body(): string {
@@ -244,6 +262,7 @@ export class GameController {
     if (s.phase === "adjusting") {
       return `${card}
         <p class="hint">${this.silhouetteMode ? "Arrastrá la silueta para moverla." : "Podés mover el marcador en el mapa hasta confirmar."}</p>
+        <button class="btn link" data-action="recenter" title="Mové el mapa (con el mouse o las flechas) y traé la pieza a su centro">Traer al centro del mapa</button>
         ${this.sizeControls()}
         ${this.rotationControls()}
         <button class="btn primary" data-action="confirm">Confirmar</button>`;
@@ -360,6 +379,7 @@ export class GameController {
     const on = (action: string, fn: () => void) =>
       this.panel.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)?.addEventListener("click", fn);
     on("drop-center", () => this.dropAtCenter());
+    on("recenter", () => this.recenter());
     on("confirm", () => this.confirm());
     on("next", () => this.next());
     on("review-all", () => this.review(null));
@@ -405,6 +425,11 @@ function log2Step(m: number): number {
 
 function formatMeters(m: number): string {
   return `${Math.round(m)} m`;
+}
+
+/** Animation length, or 0 when the user asked the system for reduced motion. */
+function motion(ms: number): number {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
 }
 
 function bounds(points: [number, number][]): [number, number, number, number] {

@@ -128,6 +128,11 @@ export class SilhouettePiece {
     this.update({ sizeRatio: d / this.o.place.eqDiameterM });
   }
 
+  /** Move the piece to a new centre (keeps size and bearing). */
+  moveTo(center: [number, number]) {
+    this.update({ center });
+  }
+
   /** Set the facade bearing in degrees (slider, keyboard). */
   setBearing(deg: number) {
     this.update({ bearing: norm360(deg) });

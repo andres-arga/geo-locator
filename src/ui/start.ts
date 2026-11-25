@@ -46,10 +46,12 @@ export function createStartScreen(
       button().addEventListener("click", () => onStart({ ...draft }));
       el.hidden = false;
       document.body.classList.add("on-start");
-      if (counts) button().focus();
+      // preventScroll: on small screens focusing would jump past the title and explanation.
+      if (counts) button().focus({ preventScroll: true });
     },
     hide() {
       el.hidden = true;
+      el.innerHTML = ""; // no hidden duplicate of the options form left in the page
       document.body.classList.remove("on-start");
     },
     setReady(c) {
@@ -62,7 +64,7 @@ export function createStartScreen(
       if (!b) return;
       b.disabled = !counts;
       b.textContent = counts ? "Empezar" : "Cargando mapa…";
-      if (counts && !el.hidden) b.focus();
+      if (counts && !el.hidden) b.focus({ preventScroll: true });
     },
   };
 }

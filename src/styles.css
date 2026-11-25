@@ -250,3 +250,25 @@ body.on-start .panel { visibility: hidden; }
 .record { margin: 0; font-size: 14px; padding: 8px 10px; border-radius: 10px; background: #f6f2ff; }
 .record.new { background: #fff4d6; color: #6b4b00; font-weight: 600; }
 .record.new .muted { font-weight: 400; }
+
+/* ---------- Phase 8: small screens ---------- */
+@media (max-width: 760px) {
+  .layout { grid-template-rows: 1fr 44vh; }
+  .panel { height: auto; min-height: 0; }
+  .panel-body { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+  .card { flex-direction: row; justify-content: flex-start; gap: 10px; }
+  .card figcaption { text-align: left; }
+  .hint { flex: none; }
+  /* The main action stays reachable while the panel scrolls. */
+  .panel-game .btn.primary {
+    position: sticky; bottom: 0; z-index: 1;
+    box-shadow: 0 -8px 12px 4px #fff;
+  }
+  .panel-foot .btn { padding: 6px 10px; }
+  .start { place-items: start center; }
+  .start-card { padding: 16px; gap: 10px; }
+  .start-head h1 { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
