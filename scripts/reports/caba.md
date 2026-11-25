@@ -90,6 +90,50 @@ Generado por `npm run data`. Revisar los valores marcados.
 - Diámetro equivalente: 9.2 m · simetría 4
 - Modificadores: tamaño ✘ (excluido) · orientación ✔
 
+### Librería El Ateneo Grand Splendid (`ateneo`)
+- Candidatos: `node/341120136` El Ateneo Grand Splendid
+- Elemento usado: `node/341120136` (automático: fijarlo con `osm` si es correcto)
+- Huella: nodo sin área (círculo de 3 m de radio)
+- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)
+- Diámetro equivalente: 5.3 m · simetría 1
+- Modificadores: tamaño ✘ (excluido) · orientación ✘ (excluido)
+
+### Galerías Pacífico (`galerias-pacifico`)
+- ❌ Overpass no respondió; volver a correr `npm run data`.
+
+### Palacio de Aguas Corrientes (`aguas-corrientes`)
+- ❌ Overpass no respondió; volver a correr `npm run data`.
+
+### Edificio Kavanagh (`kavanagh`)
+- ❌ Overpass no respondió; volver a correr `npm run data`.
+
+### Movistar Arena (`movistar-arena`)
+- Candidatos: `way/702175944` Movistar Arena
+- Elemento usado: `way/702175944` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)
+- Diámetro equivalente: 91.5 m · simetría 1
+- Modificadores: tamaño ✔ · orientación ✘ (excluido)
+
+### Estadio Pedro Bidegain – Nuevo Gasómetro (San Lorenzo) (`gasometro`)
+- Candidatos: `relation/4164015` Estadio Pedro Bidegain
+- Elemento usado: `relation/4164015` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 87° calculado (eje largo del rectángulo mínimo; simetría 2)
+- Diámetro equivalente: 179.7 m · simetría 2
+- Modificadores: tamaño ✔ · orientación ✔
+
+### Estadio José Amalfitani (Vélez Sarsfield) (`amalfitani`)
+- ❌ Overpass no respondió; volver a correr `npm run data`.
+
+### Estadio Tomás Adolfo Ducó (Huracán) (`duco`)
+- Candidatos: `relation/17351933` Estadio Tomás Adolfo Ducó
+- Elemento usado: `relation/17351933` (automático: fijarlo con `osm` si es correcto)
+- Rumbo: 63° calculado (eje largo del rectángulo mínimo; simetría 2)
+- Diámetro equivalente: 156.9 m · simetría 2
+- Modificadores: tamaño ✔ · orientación ✔
+
+### Estadio Diego Armando Maradona (Argentinos Juniors) (`maradona`)
+- ❌ Overpass no respondió; volver a correr `npm run data`.
+
 ## Capas auxiliares
 
 - Parques grandes (≥ 8 ha): 23
