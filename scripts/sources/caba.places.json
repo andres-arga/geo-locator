@@ -17,7 +17,7 @@
     { "id": "monumental", "name": "Estadio Monumental (River Plate)", "select": "nwr[\"leisure\"=\"stadium\"][\"name\"~\"Monumental\"]", "symmetry": 2 },
     { "id": "barolo", "name": "Palacio Barolo", "select": "nwr[\"name\"=\"Palacio Barolo\"]", "symmetry": 1, "facadeHint": 0 },
     { "id": "torre-monumental", "name": "Torre Monumental (ex Torre de los Ingleses)", "select": "nwr[\"name\"~\"Torre Monumental|Torre de los Ingleses\"]", "symmetry": 4 },
-    { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1, "containingBuilding": true },
+    { "id": "ateneo", "name": "Librería El Ateneo Grand Splendid", "select": "nwr[\"name\"~\"Grand Splendid\"]", "symmetry": 1, "containingBuilding": true, "facadeHint": 0, "excludeSize": "la huella en OSM cubre solo parte del ex teatro" },
     { "id": "galerias-pacifico", "name": "Galerías Pacífico", "select": "nwr[\"name\"~\"Galer[ií]as Pac[ií]fico\"]", "symmetry": 1, "facadeHint": 270 },
     { "id": "aguas-corrientes", "name": "Palacio de Aguas Corrientes", "select": "nwr[\"name\"~\"Palacio de (las )?Aguas Corrientes\"]", "symmetry": 1, "facadeHint": 0 },
     { "id": "kavanagh", "name": "Edificio Kavanagh", "select": "nwr[\"name\"~\"Kavanagh\"]", "symmetry": 1, "osm": "way/102440659", "facadeHint": 300 },

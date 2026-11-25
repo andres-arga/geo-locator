@@ -45,6 +45,8 @@ interface PlaceSource {
   mergeCandidates?: boolean;
   /** The place is mapped as a point (e.g. a shop): use the building it sits in. */
   containingBuilding?: boolean;
+  /** Exclude from size scoring (footprint in OSM does not represent the whole place). */
+  excludeSize?: string;
   bridgeWidthM?: number;
 }
 interface CitySource {
@@ -181,6 +183,39 @@ function footprintRectangle(footprint: Feature<Polygon | MultiPolygon>): { norma
   return { normal: toBearing(best.deg) % 90, longAxis: toBearing(longMath) % 180 };
 }
 
+/**
+ * Snap a manual facade hint to a real wall: the outward normal of the footprint's
+ * outer-ring edges (ignoring short edges), choosing the one closest to the hint.
+ * Works for non-rectangular footprints (e.g. a wedge with a diagonal facade).
+ */
+function snapHintToWall(footprint: Feature<Polygon | MultiPolygon>, hint: number): { bearing: number; edgeM: number } | null {
+  const polys = footprint.geometry.type === "Polygon" ? [footprint.geometry.coordinates] : footprint.geometry.coordinates;
+  const outer = polys.map((p) => p[0]);
+  const edges: { a: number[]; b: number[]; len: number }[] = [];
+  for (const ring of outer) {
+    for (let i = 0; i < ring.length - 1; i++) {
+      edges.push({ a: ring[i], b: ring[i + 1], len: turf.distance(ring[i], ring[i + 1], { units: "meters" }) });
+    }
+  }
+  const perimeter = edges.reduce((s, e) => s + e.len, 0);
+  const minLen = Math.max(8, perimeter * 0.05);
+  const centroid = turf.centerOfMass(footprint).geometry.coordinates;
+  const diff = (x: number, y: number) => Math.abs(((x - y + 540) % 360) - 180);
+  const norm = (x: number) => ((x % 360) + 360) % 360;
+  let best: { bearing: number; edgeM: number; d: number } | null = null;
+  for (const e of edges.filter((e) => e.len >= minLen)) {
+    const edge = turf.bearing(e.a, e.b);
+    const mid = turf.midpoint(e.a, e.b).geometry.coordinates;
+    const away = turf.bearing(centroid, mid); // outward side of this wall
+    const n = diff(edge + 90, away) <= diff(edge - 90, away) ? edge + 90 : edge - 90;
+    const d = diff(n, hint);
+    if (!best || d < best.d) best = { bearing: norm(n), edgeM: e.len, d };
+  }
+  // Curved facades are made of many short edges: if no long wall is close to the
+  // hint, report nothing and let the caller fall back to the footprint rectangle.
+  return best && best.d <= 30 ? { bearing: best.bearing, edgeM: best.edgeM } : null;
+}
+
 const isArea = (f: Feature) => f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon";
 const rank = { relation: 0, way: 1, node: 2 } as const;
 
@@ -307,12 +342,18 @@ async function main() {
             : "";
         lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° calculado (${how} \`node/${e.id}\` entrance=main${which})`);
       } else if (p.facadeHint !== undefined) {
-        const { normal } = footprintRectangle(footprint);
-        const options = [0, 90, 180, 270].map((k) => (normal + k) % 360);
-        const diff = (x: number) => Math.abs(((x - p.facadeHint! + 540) % 360) - 180);
-        facadeBearing = options.reduce((a, b) => (diff(b) < diff(a) ? b : a));
+        const snap = snapHintToWall(footprint, p.facadeHint);
         bearingSource = "manual";
-        lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° manual ⚠️ revisar (pista ${p.facadeHint}° ajustada a la pared más cercana)`);
+        if (snap) {
+          facadeBearing = snap.bearing;
+          lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° manual ⚠️ revisar (pista ${p.facadeHint}° ajustada a la pared real más cercana, de ${Math.round(snap.edgeM)} m)`);
+        } else {
+          const { normal } = footprintRectangle(footprint);
+          const options = [0, 90, 180, 270].map((k) => (normal + k) % 360);
+          const diff = (x: number) => Math.abs(((x - p.facadeHint! + 540) % 360) - 180);
+          facadeBearing = options.reduce((a, b) => (diff(b) < diff(a) ? b : a));
+          lines.push(`- Rumbo: ${facadeBearing.toFixed(0)}° manual ⚠️ revisar (pista ${p.facadeHint}° ajustada al lado más cercano del rectángulo mínimo: fachada curva)`);
+        }
       } else if (p.symmetry === 2 || p.symmetry === 4) {
         const rect = footprintRectangle(footprint);
         facadeBearing = p.symmetry === 4 ? rect.normal : rect.longAxis;
@@ -328,8 +369,9 @@ async function main() {
         lines.push("- Rumbo: ⚠️ FALTA (no hay entrance=main; cargar `facadeBearing` manual)");
       }
 
+      if (p.excludeSize) lines.push(`- Excluido de tamaño a mano: ${p.excludeSize}`);
       const modifiers = {
-        size: eqDiameterM >= SCORING.minSizeDiameterM,
+        size: eqDiameterM >= SCORING.minSizeDiameterM && !p.excludeSize,
         orientation: p.symmetry !== "radial" && facadeBearing !== null,
       };
       lines.push(
