@@ -1,4 +1,3 @@
-import * as maplibregl from "maplibre-gl";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { destination } from "@turf/turf";
@@ -11,30 +10,6 @@ export function createPinElement(imgUrl: string | undefined, label: string): HTM
   el.setAttribute("aria-label", label);
   el.innerHTML = `<div class="pin-head">${imgUrl ? `<img src="${imgUrl}" alt="" draggable="false">` : ""}</div>`;
   return el;
-}
-
-/** Draggable pin used in the base mode (no size/orientation modifiers). */
-export class PiecePin {
-  private marker: maplibregl.Marker;
-
-  constructor(map: MlMap, imgUrl: string | undefined, label: string, at: [number, number], onMove: (c: [number, number]) => void) {
-    this.marker = new maplibregl.Marker({ element: createPinElement(imgUrl, label), anchor: "bottom", draggable: true })
-      .setLngLat(at)
-      .addTo(map);
-    this.marker.on("dragend", () => {
-      const { lng, lat } = this.marker.getLngLat();
-      onMove([lng, lat]);
-    });
-  }
-
-  setLocked(locked: boolean) {
-    this.marker.setDraggable(!locked);
-    this.marker.getElement().classList.toggle("locked", locked);
-  }
-
-  remove() {
-    this.marker.remove();
-  }
 }
 
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };

@@ -7,7 +7,7 @@ import { maxPointsPerGame, type GameOptions } from "../game/scoring";
 import {
   confirmPiece, currentRound, newGame, nextRound, placePiece, totalScore, type GameState,
 } from "../game/state";
-import { clearResult, clearReview, createPinElement, PiecePin, showResult, showReview, type ReviewItem } from "../map/overlays";
+import { clearResult, clearReview, createPinElement, showResult, showReview, type ReviewItem } from "../map/overlays";
 import { MAX_DIAMETER_M, MIN_DIAMETER_M, SilhouettePiece } from "../map/piece";
 import { transformFootprint, vertices } from "../game/geometry";
 import { enableDrag } from "./dnd";
@@ -21,7 +21,6 @@ import { recordScore, type BestScore } from "../game/records";
  */
 export class GameController {
   private state: GameState;
-  private pin: PiecePin | null = null;
   private piece: SilhouettePiece | null = null;
   private offKeys: (() => void) | null = null;
   private recordResult: { previous: BestScore | null; isRecord: boolean } | null = null;
@@ -42,10 +41,6 @@ export class GameController {
     document.addEventListener("keydown", keys, true);
     this.offKeys = () => document.removeEventListener("keydown", keys, true);
     this.render();
-  }
-
-  private get silhouetteMode() {
-    return this.state.options.size || this.state.options.orientation;
   }
 
   /** The current place can be rotated (orientation modifier on and place not excluded). */
@@ -71,40 +66,33 @@ export class GameController {
   // ------------------------------------------------------------- actions
 
   private removePiece() {
-    this.pin?.remove();
     this.piece?.remove();
-    this.pin = null;
     this.piece = null;
   }
 
   private drop(center: [number, number]) {
     const { place } = currentRound(this.state);
     this.removePiece();
-    if (!this.silhouetteMode) {
-      this.state = placePiece(this.state, { center });
-      this.pin = new PiecePin(this.map, modelUrl(place.id), place.name, center, (c) => {
-        this.state = placePiece(this.state, { center: c });
-      });
-    } else {
-      // Neutral starting size that does not depend on the real one; excluded places use their real size.
-      const sizeRatio = this.resizable ? neutralDiameter() / place.eqDiameterM : 1;
-      // Random starting bearing so the drop does not give the answer away.
-      const bearing = this.rotatable ? Math.floor(Math.random() * 360) : (place.facadeBearing ?? 0);
-      this.state = placePiece(this.state, { center, sizeRatio, bearing });
-      this.piece = new SilhouettePiece({
-        map: this.map,
-        mapEl: this.mapEl,
-        place,
-        iconUrl: modelUrl(place.id),
-        value: currentRound(this.state).placement!,
-        resizable: this.resizable,
-        rotatable: this.rotatable,
-        onChange: (v) => {
-          this.state = placePiece(this.state, v);
-          this.syncSizeControls();
-        },
-      });
-    }
+    // The piece is always the real silhouette. Without modifiers it shows the real size
+    // and orientation (only the position is scored), which makes lining it up easier.
+    // Neutral starting size that does not depend on the real one; excluded places use their real size.
+    const sizeRatio = this.resizable ? neutralDiameter() / place.eqDiameterM : 1;
+    // Random starting bearing so the drop does not give the answer away.
+    const bearing = this.rotatable ? Math.floor(Math.random() * 360) : (place.facadeBearing ?? 0);
+    this.state = placePiece(this.state, { center, sizeRatio, bearing });
+    this.piece = new SilhouettePiece({
+      map: this.map,
+      mapEl: this.mapEl,
+      place,
+      iconUrl: modelUrl(place.id),
+      value: currentRound(this.state).placement!,
+      resizable: this.resizable,
+      rotatable: this.rotatable,
+      onChange: (v) => {
+        this.state = placePiece(this.state, v);
+        this.syncSizeControls();
+      },
+    });
     this.render();
   }
 
@@ -145,13 +133,6 @@ export class GameController {
     const c = this.map.getCenter();
     const center: [number, number] = [c.lng, c.lat];
     this.state = placePiece(this.state, { center });
-    if (this.pin) {
-      const { place } = currentRound(this.state);
-      this.pin.remove();
-      this.pin = new PiecePin(this.map, modelUrl(place.id), place.name, center, (cc) => {
-        this.state = placePiece(this.state, { center: cc });
-      });
-    }
     this.piece?.moveTo(center);
   }
 
@@ -163,7 +144,6 @@ export class GameController {
   private confirm() {
     this.state = confirmPiece(this.state);
     const round = currentRound(this.state);
-    this.pin?.setLocked(true);
     this.piece?.setLocked(true);
     const placed = round.placement!.center;
     showResult(this.map, round.place, placed, this.state.options.orientation);
@@ -192,11 +172,11 @@ export class GameController {
     this.render();
   }
 
-  /** Player's silhouette for a finished round (null in the base mode, which uses a point). */
+  /** Player's silhouette for a finished round. */
   private playerFootprint(i: number) {
     const { place, placement } = this.state.rounds[i];
     const o = this.state.options;
-    if (!placement || !(o.size || o.orientation)) return null;
+    if (!placement) return null;
     const rotation = placement.bearing - (place.facadeBearing ?? placement.bearing);
     return transformFootprint(place.footprint, place.centroid, placement.center, placement.sizeRatio, o.orientation ? rotation : 0);
   }
@@ -261,7 +241,7 @@ export class GameController {
     }
     if (s.phase === "adjusting") {
       return `${card}
-        <p class="hint">${this.silhouetteMode ? "Arrastrá la silueta para moverla." : "Podés mover el marcador en el mapa hasta confirmar."}</p>
+        <p class="hint">Arrastrá la silueta (o el ícono) para moverla. Podés acomodarla hasta confirmar.</p>
         <button class="btn link" data-action="recenter" title="Mové el mapa (con el mouse o las flechas) y traé la pieza a su centro">Traer al centro del mapa</button>
         ${this.sizeControls()}
         ${this.rotationControls()}
@@ -279,7 +259,7 @@ export class GameController {
         ${mult === 1 ? "" : `<dt>Multiplicador</dt><dd>${formatPoints(score!.subtotal)} × ${String(mult).replace(".", ",")}</dd>`}
         <dt>Total ronda</dt><dd><strong>${formatPoints(score!.total)}</strong></dd>
       </dl>
-      <p class="legend"><span class="sw real"></span> ubicación real · ${this.piece ? '<span class="sw mine"></span> tu pieza · ' : ""}<span class="sw err"></span> distancia</p>
+      <p class="legend"><span class="sw real"></span> ubicación real · <span class="sw mine"></span> tu pieza · <span class="sw err"></span> distancia</p>
       <button class="btn primary" data-action="next">${last ? "Ver resultado final" : "Siguiente lugar"}</button>`;
   }
 
