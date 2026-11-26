@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Cabildo de Córdoba</title><rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/><rect x="8" y="50" width="104" height="54" fill="#f6f2e8" stroke="#8c8270" stroke-width="2"/><rect x="8" y="44" width="104" height="8" fill="#b5523b"/><path d="M12 104 V86 Q18 76 24 86 V104 Z" fill="#8c8270"/><path d="M28 104 V86 Q34 76 40 86 V104 Z" fill="#8c8270"/><path d="M44 104 V86 Q50 76 56 86 V104 Z" fill="#8c8270"/><path d="M60 104 V86 Q66 76 72 86 V104 Z" fill="#8c8270"/><path d="M76 104 V86 Q82 76 88 86 V104 Z" fill="#8c8270"/><path d="M92 104 V86 Q98 76 104 86 V104 Z" fill="#8c8270"/><path d="M13 76 V62 Q18 55 23 62 V76 Z" fill="#a89e8a"/><path d="M29 76 V62 Q34 55 39 62 V76 Z" fill="#a89e8a"/><path d="M45 76 V62 Q50 55 55 62 V76 Z" fill="#a89e8a"/><path d="M61 76 V62 Q66 55 71 62 V76 Z" fill="#a89e8a"/><path d="M77 76 V62 Q82 55 87 62 V76 Z" fill="#a89e8a"/><path d="M93 76 V62 Q98 55 103 62 V76 Z" fill="#a89e8a"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Cabildo de Córdoba</title>
+<g stroke="#8f8778" stroke-width="1.5" stroke-linejoin="round">
+<rect x="50" y="34" width="20" height="10" fill="#f6f3ec"/>
+<path d="M48 34 H72 L70 31 H50 Z" fill="#e4dfd4"/>
+<rect x="8" y="44" width="104" height="60" fill="#f6f3ec"/>
+<rect x="6" y="41" width="108" height="4" fill="#e4dfd4"/>
+<rect x="6" y="74" width="108" height="3" fill="#e4dfd4"/>
+<rect x="8" y="100" width="104" height="4" fill="#d6cfc1"/>
+</g>
+<g fill="#6d6355">
+<path d="M9.8 100 V86 A4 4 0 0 1 17.8 86 V100 Z"/><path d="M21.3 100 V86 A4 4 0 0 1 29.3 86 V100 Z"/><path d="M32.9 100 V86 A4 4 0 0 1 40.9 86 V100 Z"/><path d="M44.4 100 V86 A4 4 0 0 1 52.4 86 V100 Z"/><path d="M55.5 100 V85 A4.5 4.5 0 0 1 64.5 85 V100 Z"/><path d="M67.6 100 V86 A4 4 0 0 1 75.6 86 V100 Z"/><path d="M79.1 100 V86 A4 4 0 0 1 87.1 86 V100 Z"/><path d="M90.7 100 V86 A4 4 0 0 1 98.7 86 V100 Z"/><path d="M102.2 100 V86 A4 4 0 0 1 110.2 86 V100 Z"/>
+</g>
+<g fill="#7a6e5e">
+<path d="M11.3 69 V54.5 A2.5 2.5 0 0 1 16.3 54.5 V69 Z"/><path d="M22.8 69 V54.5 A2.5 2.5 0 0 1 27.8 54.5 V69 Z"/><path d="M34.4 69 V54.5 A2.5 2.5 0 0 1 39.4 54.5 V69 Z"/><path d="M45.9 69 V54.5 A2.5 2.5 0 0 1 50.9 54.5 V69 Z"/><path d="M57 69 V53.5 A3 3 0 0 1 63 53.5 V69 Z"/><path d="M69.1 69 V54.5 A2.5 2.5 0 0 1 74.1 54.5 V69 Z"/><path d="M80.6 69 V54.5 A2.5 2.5 0 0 1 85.6 54.5 V69 Z"/><path d="M92.2 69 V54.5 A2.5 2.5 0 0 1 97.2 54.5 V69 Z"/><path d="M103.7 69 V54.5 A2.5 2.5 0 0 1 108.7 54.5 V69 Z"/>
+</g>
+<g fill="none" stroke="#4e463c" stroke-width="1.2">
+<path d="M9.6 68.5 H18 M9.6 66.5 V70 M18 66.5 V70 M21.1 68.5 H29.5 M21.1 66.5 V70 M29.5 66.5 V70 M32.7 68.5 H41.1 M32.7 66.5 V70 M41.1 66.5 V70 M44.2 68.5 H52.6 M44.2 66.5 V70 M52.6 66.5 V70 M55.8 68.5 H64.2 M55.8 66.5 V70 M64.2 66.5 V70 M67.4 68.5 H75.8 M67.4 66.5 V70 M75.8 66.5 V70 M78.9 68.5 H87.3 M78.9 66.5 V70 M87.3 66.5 V70 M90.5 68.5 H98.9 M90.5 66.5 V70 M98.9 66.5 V70 M102 68.5 H110.4 M102 66.5 V70 M110.4 66.5 V70"/>
+</g>
+<g fill="#e4dfd4" stroke="#8f8778" stroke-width="1">
+<path d="M10.3 52 L13.8 48.5 L17.3 52 Z M21.8 52 L25.3 48.5 L28.8 52 Z M33.4 52 L36.9 48.5 L40.4 52 Z M44.9 52 L48.4 48.5 L51.9 52 Z M56 51 L60 47 L64 51 Z M68.1 52 L71.6 48.5 L75.1 52 Z M79.6 52 L83.1 48.5 L86.6 52 Z M91.2 52 L94.7 48.5 L98.2 52 Z M102.7 52 L106.2 48.5 L109.7 52 Z"/>
+</g>
+<rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/>
+</svg>

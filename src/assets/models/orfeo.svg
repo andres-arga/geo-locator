@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Orfeo Superdomo</title><rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/><path d="M12 104 V84 Q60 30 108 84 V104 Z" fill="#e4e6ea" stroke="#4b5563" stroke-width="2"/><path d="M20 84 Q60 44 100 84" fill="none" stroke="#9aa3ad" stroke-width="2"/><rect x="12" y="86" width="96" height="6" fill="#d0202e"/><rect x="50" y="94" width="20" height="10" fill="#4b5563"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Orfeo Superdomo</title>
+<g stroke-linejoin="round">
+<path d="M8 92 A52 52 0 0 1 112 92 Z" fill="#f4f5f7" stroke="#7d8794" stroke-width="1.5"/>
+<path d="M60 40 A30 52 0 0 1 90 92 H112 A52 52 0 0 0 60 40 Z" fill="#dfe3e8"/>
+<path d="M8 92 A52 52 0 0 1 112 92" fill="none" stroke="#7d8794" stroke-width="1.5"/>
+<g fill="none" stroke="#a7b0bb" stroke-width="1.2">
+<path d="M82 92 A22 52 0 0 0 60 40 M38 92 A22 52 0 0 1 60 40"/>
+<path d="M99.8 92 A39.8 52 0 0 0 60 40 M20.2 92 A39.8 52 0 0 1 60 40"/>
+<path d="M60 92 V40"/>
+<path d="M12 72 Q60 64 108 72 M22.5 56 Q60 50 97.5 56"/>
+</g>
+<ellipse cx="60" cy="42" rx="9" ry="2.5" fill="#cfd5dc" stroke="#7d8794" stroke-width="1.2"/>
+<rect x="8" y="90" width="104" height="14" fill="#e9ebee" stroke="#7d8794" stroke-width="1.5"/>
+<rect x="8" y="94" width="104" height="5" fill="#4b5563"/>
+<path d="M20 94 V99 M32 94 V99 M88 94 V99 M100 94 V99" stroke="#8d97a3" stroke-width="1"/>
+<rect x="48" y="91" width="24" height="13" fill="#3a4350" stroke="#2c333d" stroke-width="1"/>
+<path d="M54 91 V104 M60 91 V104 M66 91 V104" stroke="#7d8794" stroke-width="1"/>
+<path d="M38 85 H82 L84 90 H36 Z" fill="#d0d5db" stroke="#6b7480" stroke-width="1.2"/>
+<path d="M40 90 V104 M80 90 V104" stroke="#9aa3ad" stroke-width="2"/>
+</g>
+<rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/>
+</svg>

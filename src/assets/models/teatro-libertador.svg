@@ -1,1 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Teatro del Libertador General San Martín</title><rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/><rect x="14" y="46" width="92" height="58" fill="#efe2c4" stroke="#8c7550" stroke-width="2"/><rect x="10" y="38" width="100" height="10" fill="#e0cfa3" stroke="#8c7550" stroke-width="2"/><rect x="20" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="32" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="44" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="56" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="68" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="80" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="92" y="50" width="6" height="40" fill="#d8c79c" stroke="#8c7550" stroke-width="1"/><rect x="14" y="90" width="92" height="14" fill="#e0cfa3"/><path d="M50 104 V92 H70 V104 Z" fill="#7a5f38"/><circle cx="60" cy="30" r="6" fill="#c9a96b" stroke="#8c7550" stroke-width="2"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Teatro del Libertador General San Martín</title>
+<g stroke="#9a8458" stroke-width="1.5" stroke-linejoin="round">
+<rect x="40" y="26" width="40" height="16" fill="#efe2c2"/>
+<rect x="38" y="24" width="44" height="3" fill="#e2d1a6"/>
+<path d="M44 30 H76 V40 H44 Z" fill="#e2d1a6" stroke-width="1"/>
+<rect x="12" y="44" width="96" height="60" fill="#f4e9cf"/>
+<rect x="10" y="40" width="100" height="5" fill="#e9dcb8"/>
+<rect x="10" y="46" width="100" height="5" fill="#e2d1a6"/>
+<rect x="10" y="77" width="100" height="4" fill="#e2d1a6"/>
+<rect x="12" y="81" width="96" height="23" fill="#ebdcb7"/>
+</g>
+<g stroke="#9a8458" stroke-width="1">
+<rect x="56" y="18" width="8" height="6" fill="#e2d1a6"/>
+<path d="M57 18 V12 Q60 7 63 12 V18 Z" fill="#f4e9cf"/>
+<path d="M50 24 V18 Q52 15 54 18 V24 Z M66 24 V18 Q68 15 70 18 V24 Z" fill="#f4e9cf"/>
+<path d="M14 40 V34 Q16 31 18 34 V40 Z M102 40 V34 Q104 31 106 34 V40 Z M27 40 V35 Q29 32 31 35 V40 Z M89 40 V35 Q91 32 93 35 V40 Z" fill="#f4e9cf"/>
+<path d="M44 32 V40 M48 32 V40 M52 32 V40 M56 32 V40 M64 32 V40 M68 32 V40 M72 32 V40 M76 32 V40" fill="none"/>
+</g>
+<circle cx="60" cy="7" r="1.8" fill="#f4e9cf" stroke="#9a8458" stroke-width="1"/>
+<circle cx="52" cy="14.5" r="1.5" fill="#f4e9cf" stroke="#9a8458" stroke-width="1"/>
+<circle cx="68" cy="14.5" r="1.5" fill="#f4e9cf" stroke="#9a8458" stroke-width="1"/>
+<g fill="#7a6440">
+<path d="M15.9 69 V60 A3 3 0 0 1 21.9 60 V69 Z"/><path d="M29.6 69 V60 A3 3 0 0 1 35.6 60 V69 Z"/><path d="M43.3 69 V60 A3 3 0 0 1 49.3 60 V69 Z"/><path d="M56.5 70 V59 A3.5 3.5 0 0 1 63.5 59 V70 Z"/><path d="M70.7 69 V60 A3 3 0 0 1 76.7 60 V69 Z"/><path d="M84.4 69 V60 A3 3 0 0 1 90.4 60 V69 Z"/><path d="M98.1 69 V60 A3 3 0 0 1 104.1 60 V69 Z"/>
+<path d="M14.9 104 V91 A4 4 0 0 1 22.9 91 V104 Z"/><path d="M28.6 104 V91 A4 4 0 0 1 36.6 91 V104 Z"/><path d="M42.3 104 V91 A4 4 0 0 1 50.3 91 V104 Z"/><path d="M55 104 V90 A5 5 0 0 1 65 90 V104 Z"/><path d="M69.7 104 V91 A4 4 0 0 1 77.7 91 V104 Z"/><path d="M83.4 104 V91 A4 4 0 0 1 91.4 91 V104 Z"/><path d="M97.1 104 V91 A4 4 0 0 1 105.1 91 V104 Z"/>
+</g>
+<g fill="#fbf4e2" stroke="#9a8458" stroke-width="0.8">
+<rect x="12.5" y="51" width="2" height="26"/><rect x="23.2" y="51" width="2" height="26"/><rect x="26.4" y="51" width="2" height="26"/><rect x="36.9" y="51" width="2" height="26"/><rect x="40.1" y="51" width="2" height="26"/><rect x="50.6" y="51" width="2" height="26"/><rect x="53.8" y="51" width="2" height="26"/><rect x="64.2" y="51" width="2" height="26"/><rect x="67.4" y="51" width="2" height="26"/><rect x="77.9" y="51" width="2" height="26"/><rect x="81.1" y="51" width="2" height="26"/><rect x="91.6" y="51" width="2" height="26"/><rect x="94.8" y="51" width="2" height="26"/><rect x="105.5" y="51" width="2" height="26"/>
+</g>
+<rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/>
+</svg>

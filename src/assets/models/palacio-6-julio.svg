@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Palacio 6 de Julio (Municipalidad)</title><rect x="6" y="104" width="108" height="6" rx="3" fill="#cfc6b3"/><rect x="8" y="58" width="104" height="46" fill="#d3cfc6" stroke="#5f5b54" stroke-width="2"/><rect x="18" y="40" width="84" height="18" fill="#c4bfb4" stroke="#5f5b54" stroke-width="2"/><rect x="14" y="64" width="4" height="40" fill="#5f5b54"/><rect x="24" y="64" width="4" height="40" fill="#5f5b54"/><rect x="34" y="64" width="4" height="40" fill="#5f5b54"/><rect x="44" y="64" width="4" height="40" fill="#5f5b54"/><rect x="54" y="64" width="4" height="40" fill="#5f5b54"/><rect x="64" y="64" width="4" height="40" fill="#5f5b54"/><rect x="74" y="64" width="4" height="40" fill="#5f5b54"/><rect x="84" y="64" width="4" height="40" fill="#5f5b54"/><rect x="94" y="64" width="4" height="40" fill="#5f5b54"/><rect x="104" y="64" width="4" height="40" fill="#5f5b54"/><rect x="24" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="34" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="44" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="54" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="64" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="74" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="84" y="44" width="6" height="10" rx="0" fill="#7a756c"/><rect x="94" y="44" width="6" height="10" rx="0" fill="#7a756c"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><title>Palacio 6 de Julio (Municipalidad)</title>
+<g stroke-linejoin="round">
+<rect x="62" y="16" width="44" height="30" fill="#4b5560" stroke="#5f5b54" stroke-width="1.5"/>
+<path d="M65 17V45M69.75 17V45M74.5 17V45M79.25 17V45M84 17V45M88.75 17V45M93.5 17V45M98.25 17V45M103 17V45" stroke="#cdc8be" stroke-width="2.4"/>
+<rect x="60" y="13" width="48" height="4" fill="#c4bfb5" stroke="#5f5b54" stroke-width="1.2"/>
+<rect x="8" y="44" width="104" height="38" fill="#4b5560" stroke="#5f5b54" stroke-width="1.5"/>
+<path d="M8 57 H112 M8 69 H112" stroke="#b7b2a8" stroke-width="2"/>
+<path d="M11 48V78M15 48V78M19 48V78M23 48V78M27 48V78M31 48V78M35 48V78M39 48V78M43 48V78M47 48V78M51 48V78M55 48V78M59 48V78M63 48V78M67 48V78M71 48V78M75 48V78M79 48V78M83 48V78M87 48V78M91 48V78M95 48V78M99 48V78M103 48V78M107 48V78" stroke="#d6d1c7" stroke-width="2.2"/>
+<rect x="6" y="41" width="108" height="5" fill="#cbc6bc" stroke="#5f5b54" stroke-width="1.2"/>
+<rect x="8" y="78" width="104" height="5" fill="#bdb8ae" stroke="#5f5b54" stroke-width="1.2"/>
+<rect x="16" y="86" width="88" height="14" fill="#5c6670" stroke="#3f464d" stroke-width="1"/>
+<path d="M30 86 V100 M44 86 V100 M76 86 V100 M90 86 V100" stroke="#8a96a1" stroke-width="1"/>
+<path d="M54 100 V88 H66 V100" fill="#33393f"/>
+<g fill="#cbc6bc" stroke="#5f5b54" stroke-width="1">
+<rect x="10" y="83" width="3.5" height="17"/><rect x="23" y="83" width="3.5" height="17"/><rect x="36" y="83" width="3.5" height="17"/><rect x="49" y="83" width="3.5" height="17"/><rect x="67.5" y="83" width="3.5" height="17"/><rect x="80.5" y="83" width="3.5" height="17"/><rect x="93.5" y="83" width="3.5" height="17"/><rect x="106.5" y="83" width="3.5" height="17"/>
+</g>
+<rect x="6" y="100" width="108" height="4" fill="#bdb6a6" stroke="#8a8272" stroke-width="1"/>
+</g>
+<rect x="6" y="104" width="108" height="6" rx="3" fill="#7fb3cf"/>
+<path d="M14 107 H30 M48 107 H70 M88 107 H104" stroke="#d3e9f5" stroke-width="1" stroke-linecap="round"/>
+</svg>
