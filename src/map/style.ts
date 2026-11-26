@@ -133,6 +133,12 @@ export function buildStyle(city: CityConfig, baseUrl: string): StyleSpecificatio
       paint: { "fill-color": COLORS.cityBlank },
       metadata: meta(["hard"]),
     },
+    ...(city.hardRoads?.length
+      ? [
+          roadLine("hard-roads-casing", city.hardRoads, COLORS.highwayCasing, [[10, 1.4], [17, 17]], ["hard"]),
+          roadLine("hard-roads", city.hardRoads, COLORS.highway, [[10, 0.9], [17, 13]], ["hard"]),
+        ]
+      : []),
     {
       id: "city-boundary",
       type: "line",

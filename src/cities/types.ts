@@ -17,4 +17,9 @@ export interface CityConfig {
   places: string;
   /** Street names never shown on the map because they would give away a place. */
   hiddenStreetNames: string[];
+  /**
+   * Hard level: road classes (Protomaps kind_detail, e.g. "motorway") drawn ON TOP of
+   * the blank city, as reference. Omit to keep the city completely blank.
+   */
+  hardRoads?: string[];
 }

@@ -15,4 +15,6 @@ export const cordoba: CityConfig = {
   majorParks: "data/cities/cordoba/parks-major.geojson",
   places: "data/cities/cordoba/places.json",
   hiddenStreetNames: [],
+  // Hard level: Circunvalación and the motorways/national routes that enter the city.
+  hardRoads: ["motorway", "trunk"],
 };

@@ -55,3 +55,18 @@ describe("map levels", () => {
     expect(isLayerVisible(undefined, { level: "hard", streetNames: false })).toBe(true);
   });
 });
+
+describe("hard level reference roads (per city)", () => {
+  it("CABA keeps the city completely blank", () => {
+    expect(style.layers.map((l) => l.id)).not.toContain("hard-roads");
+  });
+  it("Córdoba draws Circunvalación and the entry routes above the blank city", async () => {
+    const { cordoba } = await import("../src/cities/cordoba");
+    const s = buildStyle(cordoba, "http://localhost/");
+    const ids = s.layers.map((l) => l.id);
+    const visible = s.layers.filter((l) => isLayerVisible(l.metadata, { level: "hard", streetNames: false })).map((l) => l.id);
+    expect(visible).toContain("hard-roads");
+    expect(ids.indexOf("hard-roads")).toBeGreaterThan(ids.indexOf("city-mask"));
+    expect(isLayerVisible(s.layers[ids.indexOf("hard-roads")].metadata, { level: "easy", streetNames: true })).toBe(false);
+  });
+});
