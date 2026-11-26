@@ -9,19 +9,23 @@ import { esc, formatPoints } from "./format";
 export type BestLookup = (s: Settings) => BestScore | null;
 
 /** Everything the menu controls. Street names only matter on the easy level. */
+/** Quick game (ROUNDS_PER_GAME random places) or full game (every place of the selection). */
+export type GameLength = "quick" | "full";
+
 export interface Settings extends GameOptions {
   city: string;
+  length: GameLength;
   streetNames: boolean;
   placeSet: PlaceSet;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  city: DEFAULT_CITY, level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all",
+  city: DEFAULT_CITY, length: "quick", level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all",
 };
 
 export function sameSettings(a: Settings, b: Settings): boolean {
   return (
-    a.city === b.city && a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
+    a.city === b.city && a.length === b.length && a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
     a.streetNames === b.streetNames && a.placeSet === b.placeSet
   );
 }
@@ -31,7 +35,8 @@ export type PlaceCounts = Record<string, Record<PlaceSet, number>> | null;
 
 export function roundsFor(s: Settings, counts: PlaceCounts): number {
   const c = counts?.[s.city];
-  return c ? Math.min(ROUNDS_PER_GAME, c[s.placeSet]) : ROUNDS_PER_GAME;
+  if (!c) return ROUNDS_PER_GAME;
+  return s.length === "full" ? c[s.placeSet] : Math.min(ROUNDS_PER_GAME, c[s.placeSet]);
 }
 
 // ------------------------------------------------------------------ storage
@@ -45,7 +50,8 @@ export function loadSettings(): Settings {
     if (raw && raw.level in MAP_LEVELS) {
       const placeSet: PlaceSet = ["all", "stadiums", "landmarks"].includes(raw.placeSet) ? raw.placeSet : "all";
       const city = typeof raw.city === "string" && raw.city in CITIES ? raw.city : DEFAULT_CITY;
-      return { city, level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
+      const length: GameLength = raw.length === "full" ? "full" : "quick";
+      return { city, length, level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
     }
   } catch {
     /* storage unavailable or corrupt: use defaults */
@@ -106,6 +112,12 @@ export function mountSettingsForm(
     root.innerHTML = `
       <fieldset class="cities"><legend>Ciudad</legend>${cities}</fieldset>
       <fieldset><legend>Lugares</legend>${sets}</fieldset>
+      <fieldset><legend>Partida</legend>
+        <label class="choice"><input type="radio" name="length" value="quick" ${draft.length === "quick" ? "checked" : ""}>
+          <span><strong>Partida rápida</strong><br><span class="muted">${ROUNDS_PER_GAME} lugares al azar.</span></span></label>
+        <label class="choice"><input type="radio" name="length" value="full" ${draft.length === "full" ? "checked" : ""}>
+          <span><strong>Partida completa</strong>${cityCounts ? ` <span class="muted">(${cityCounts[draft.placeSet]})</span>` : ""}<br><span class="muted">Todos los lugares de la selección, en orden al azar.</span></span></label>
+      </fieldset>
       <fieldset><legend>Dificultad del mapa</legend>${levels}
         <label class="toggle ${draft.level !== "easy" ? "disabled" : ""}"><input type="checkbox" name="streetNames" ${draft.streetNames ? "checked" : ""} ${draft.level !== "easy" ? "disabled" : ""}>
           Mostrar nombres de calles <span class="muted">(solo en Fácil)</span></label>
@@ -124,6 +136,7 @@ export function mountSettingsForm(
         if (input.name === "level") draft = { ...draft, level: input.value as MapLevel };
         else if (input.name === "placeSet") draft = { ...draft, placeSet: input.value as PlaceSet };
         else if (input.name === "city") draft = { ...draft, city: input.value };
+        else if (input.name === "length") draft = { ...draft, length: input.value as GameLength };
         else draft = { ...draft, [input.name]: input.checked };
         render(input.name, input.type === "radio" ? input.value : undefined);
         onChange({ ...draft });

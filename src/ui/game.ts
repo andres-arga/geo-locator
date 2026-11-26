@@ -35,8 +35,10 @@ export class GameController {
     options: GameOptions,
     /** localStorage key for the best score of this options combination. */
     private recordKey?: string,
+    /** Number of rounds (defaults to ROUNDS_PER_GAME; a full game passes every place). */
+    rounds?: number,
   ) {
-    this.state = newGame(places, options);
+    this.state = newGame(places, options, Math.random, rounds);
     const keys = (e: KeyboardEvent) => this.key(e);
     document.addEventListener("keydown", keys, true);
     this.offKeys = () => document.removeEventListener("keydown", keys, true);
@@ -211,7 +213,7 @@ export class GameController {
         <div><strong>${s.phase === "finished" ? "Partida terminada" : `Lugar ${s.current + 1} de ${s.rounds.length}`}</strong></div>
         <div class="panel-score">${formatPoints(totalScore(s))} pts <span class="muted">/ máx ${formatPoints(maxPointsPerGame(s.options, s.rounds.length))} (×${mult})</span></div>
       </header>
-      <ol class="strip">${s.rounds
+      <ol class="strip${s.rounds.length > 10 ? " many" : ""}">${s.rounds
         .map((r, i) => {
           const cls = i < s.current || s.phase === "finished" ? "done" : i === s.current ? "current" : "";
           return `<li class="${cls}" title="${i <= s.current || s.phase === "finished" ? esc(r.place.name) : "Próximo lugar"}"><img src="${modelUrl(r.place.id) ?? ""}" alt=""></li>`;

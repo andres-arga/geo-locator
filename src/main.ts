@@ -71,7 +71,8 @@ async function start() {
   cm.map.jumpTo({ center: cm.city.center, zoom: cm.city.zoom });
   const { level, size, orientation } = settings;
   const places = filterPlaces(placesByCity[cm.city.id] ?? [], settings.placeSet);
-  game = new GameController(cm.map, cm.el, gameEl, cm.city, places, { level, size, orientation }, recordKey(cm.city.id, settings));
+  const rounds = settings.length === "full" ? places.length : undefined;
+  game = new GameController(cm.map, cm.el, gameEl, cm.city, places, { level, size, orientation }, recordKey(cm.city.id, settings), rounds);
 }
 
 function useSettings(s: Settings) {

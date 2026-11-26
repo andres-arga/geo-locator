@@ -4,6 +4,8 @@ import type { PlaceSet } from "./state";
 /** Options that define a comparable game (same max score and difficulty). */
 export interface RecordOptions {
   placeSet: PlaceSet;
+  /** "full" games have their own records; quick games keep the original keys. */
+  length?: "quick" | "full";
   level: MapLevel;
   size: boolean;
   orientation: boolean;
@@ -23,7 +25,8 @@ export type KV = Pick<Storage, "getItem" | "setItem">;
 /** Street names only exist (and help) on the easy level. */
 export function recordKey(city: string, o: RecordOptions): string {
   const names = o.level === "easy" && o.streetNames ? ":names" : "";
-  return `geo-locator:best:${city}:${o.placeSet}:${o.level}:size${o.size ? 1 : 0}:ori${o.orientation ? 1 : 0}${names}`;
+  const full = o.length === "full" ? ":full" : "";
+  return `geo-locator:best:${city}:${o.placeSet}:${o.level}:size${o.size ? 1 : 0}:ori${o.orientation ? 1 : 0}${names}${full}`;
 }
 
 function defaultStore(): KV | null {

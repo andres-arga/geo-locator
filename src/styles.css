@@ -274,3 +274,7 @@ body.on-start .panel { visibility: hidden; }
 }
 .choice.disabled { opacity: .5; cursor: default; }
 fieldset.cities { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
+/* Full games: many rounds, smaller thumbnails. */
+.strip.many { gap: 3px; }
+.strip.many li { width: 24px; height: 24px; border-width: 1.5px; border-radius: 6px; }
+.strip.many li img { width: 18px; height: 18px; }

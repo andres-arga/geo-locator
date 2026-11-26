@@ -2,7 +2,7 @@
 
 Minijuego web de geografía urbana: arrastrá lugares icónicos de una ciudad al mapa, donde
 creas que están. Opcionalmente, acertá también su **tamaño** y hacia dónde mira su
-**fachada**. Primera ciudad: Buenos Aires (CABA), con 21 lugares.
+**fachada**. Ciudades: Buenos Aires (CABA) y Córdoba, con 25 lugares cada una.
 
 **Jugar:** https://andres-arga.github.io/geo-locator/ · **Revisión de datos:** [`/debug.html`](https://andres-arga.github.io/geo-locator/debug.html)
 
@@ -10,8 +10,10 @@ Sitio 100 % estático (Vite + TypeScript + MapLibre GL JS + turf.js), sin backen
 
 ## Cómo se juega
 
-- Cada partida elige 7 lugares al azar (6 en Modo Fútbol) de la selección elegida:
-  todos, solo estadios (**Modo Fútbol**) o lugares icónicos sin estadios.
+- Ciudades: **Buenos Aires (CABA)** y **Córdoba**.
+- **Partida rápida** (7 lugares al azar) o **partida completa** (todos los lugares de la
+  selección), eligiendo entre todos los lugares, solo estadios (**Modo Fútbol**) o
+  lugares icónicos sin estadios.
 - **Dificultad del mapa** (multiplica el puntaje): Fácil ×1 (mapa completo, nombres de
   calles opcionales), Medio ×1,5 (avenidas, autopistas, parques grandes y río), Difícil ×2
   (la ciudad en blanco, solo el contorno). El mapa siempre tiene el norte arriba.
