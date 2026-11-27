@@ -1,12 +1,14 @@
 import { distance } from "@turf/turf";
 import { SCORING } from "../config/scoring";
-import { MAP_LEVELS, ROUNDS_PER_GAME, type MapLevel } from "../config/game";
+import { MAP_LEVELS, ROUNDS_PER_GAME, TIMER_MODES, type MapLevel, type TimerMode } from "../config/game";
 import type { Place, Symmetry } from "../cities/placeTypes";
 
 export interface GameOptions {
   level: MapLevel;
   size: boolean;
   orientation: boolean;
+  /** Contrarreloj mode; omitted or "off" = no clock. */
+  timer?: TimerMode;
 }
 
 /** What the player committed for one place. */
@@ -30,9 +32,19 @@ export interface ScoreBreakdown {
   position: ComponentScore;
   size?: ComponentScore & { errorLog2?: number; errorPct?: number };
   orientation?: ComponentScore & { errorDeg?: number };
+  /** Contrarreloj bonus for the leftover time (points before multipliers). */
+  timeBonus?: { points: number; secondsLeft: number; seconds: number };
+  /** True when the clock ran out before the piece was dropped (scores 0). */
+  timedOut?: boolean;
   subtotal: number;
+  /** Map level multiplier × contrarreloj multiplier. */
   multiplier: number;
   total: number;
+}
+
+/** Map level × contrarreloj multiplier. */
+export function totalMultiplier(options: GameOptions): number {
+  return MAP_LEVELS[options.level].multiplier * TIMER_MODES[options.timer ?? "off"].multiplier;
 }
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -86,14 +98,14 @@ function compensated(max: number, positionPts: number): ComponentScore {
   return { points: max * (positionPts / SCORING.position.max), max, compensated: true };
 }
 
-export function scorePlacement(place: Place, placement: Placement, options: GameOptions): ScoreBreakdown {
+export function scorePlacement(place: Place, placement: Placement, options: GameOptions, secondsLeft?: number): ScoreBreakdown {
   const distanceM = distance(placement.center, place.centroid, { units: "meters" });
   const posPts = positionPoints(distanceM);
   const result: ScoreBreakdown = {
     distanceM,
     position: { points: posPts, max: SCORING.position.max, compensated: false },
     subtotal: 0,
-    multiplier: MAP_LEVELS[options.level].multiplier,
+    multiplier: totalMultiplier(options),
     total: 0,
   };
 
@@ -124,6 +136,14 @@ export function scorePlacement(place: Place, placement: Placement, options: Game
   }
 
   result.subtotal = posPts + (result.size?.points ?? 0) + (result.orientation?.points ?? 0);
+  const seconds = TIMER_MODES[options.timer ?? "off"].seconds;
+  if (seconds !== null && secondsLeft !== undefined) {
+    // Faster = more points: up to +timeBonusMax of what the place scored.
+    const left = Math.min(seconds, Math.max(0, secondsLeft));
+    const points = result.subtotal * SCORING.timeBonusMax * (left / seconds);
+    result.timeBonus = { points, secondsLeft: left, seconds };
+    result.subtotal += points;
+  }
   result.total = Math.round(result.subtotal * result.multiplier);
   return result;
 }
@@ -133,7 +153,23 @@ export function maxPointsPerItem(options: GameOptions): number {
     SCORING.position.max +
     (options.size ? SCORING.size.max : 0) +
     (options.orientation ? SCORING.orientation.max : 0);
-  return base * MAP_LEVELS[options.level].multiplier;
+  const bonus = TIMER_MODES[options.timer ?? "off"].seconds !== null ? 1 + SCORING.timeBonusMax : 1;
+  return base * bonus * totalMultiplier(options);
+}
+
+/** Score of a place whose clock ran out before the piece was dropped. */
+export function timedOutScore(options: GameOptions): ScoreBreakdown {
+  const zero = (max: number): ComponentScore => ({ points: 0, max, compensated: false });
+  return {
+    distanceM: NaN,
+    position: zero(SCORING.position.max),
+    ...(options.size ? { size: zero(SCORING.size.max) } : {}),
+    ...(options.orientation ? { orientation: zero(SCORING.orientation.max) } : {}),
+    timedOut: true,
+    subtotal: 0,
+    multiplier: totalMultiplier(options),
+    total: 0,
+  };
 }
 
 export function maxPointsPerGame(options: GameOptions, rounds = ROUNDS_PER_GAME): number {

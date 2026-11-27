@@ -6,6 +6,8 @@ export interface RecordOptions {
   placeSet: PlaceSet;
   /** "full" games have their own records; quick games keep the original keys. */
   length?: "quick" | "full";
+  /** Contrarreloj games have their own records; "off" keeps the original keys. */
+  timer?: "off" | "relaxed" | "normal" | "hard";
   level: MapLevel;
   size: boolean;
   orientation: boolean;
@@ -26,7 +28,8 @@ export type KV = Pick<Storage, "getItem" | "setItem">;
 export function recordKey(city: string, o: RecordOptions): string {
   const names = o.level === "easy" && o.streetNames ? ":names" : "";
   const full = o.length === "full" ? ":full" : "";
-  return `geo-locator:best:${city}:${o.placeSet}:${o.level}:size${o.size ? 1 : 0}:ori${o.orientation ? 1 : 0}${names}${full}`;
+  const timer = o.timer && o.timer !== "off" ? `:t-${o.timer}` : "";
+  return `geo-locator:best:${city}:${o.placeSet}:${o.level}:size${o.size ? 1 : 0}:ori${o.orientation ? 1 : 0}${names}${full}${timer}`;
 }
 
 function defaultStore(): KV | null {

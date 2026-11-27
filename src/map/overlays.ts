@@ -35,7 +35,7 @@ export function addResultLayers(map: MlMap) {
   });
 }
 
-export function showResult(map: MlMap, place: Place, placed: [number, number], showFacade = false) {
+export function showResult(map: MlMap, place: Place, placed: [number, number] | null, showFacade = false) {
   const facade: Feature[] = [];
   if (showFacade && place.facadeBearing !== null && place.symmetry !== "radial") {
     // Real facade direction as an arrow from the centroid.
@@ -51,7 +51,9 @@ export function showResult(map: MlMap, place: Place, placed: [number, number], s
     features: [
       ...facade,
       { ...place.footprint, properties: { kind: "footprint" } },
-      { type: "Feature", properties: { kind: "error" }, geometry: { type: "LineString", coordinates: [placed, place.centroid] } },
+      ...(placed
+        ? [{ type: "Feature" as const, properties: { kind: "error" }, geometry: { type: "LineString" as const, coordinates: [placed, place.centroid] } }]
+        : []),
       { type: "Feature", properties: { kind: "real" }, geometry: { type: "Point", coordinates: place.centroid } },
     ],
   };
@@ -67,7 +69,8 @@ export function clearResult(map: MlMap) {
 export interface ReviewItem {
   index: number; // 1-based round number, used as label
   place: Place;
-  placed: [number, number];
+  /** null when the clock ran out before the piece was dropped. */
+  placed: [number, number] | null;
   /** Player's silhouette when a modifier was on; null = the base mode pin. */
   playerFootprint: Feature<Polygon | MultiPolygon> | null;
 }
@@ -104,8 +107,10 @@ export function showReview(map: MlMap, items: ReviewItem[]) {
   for (const it of items) {
     features.push({ ...it.place.footprint, properties: { kind: "real-fp" } });
     if (it.playerFootprint) features.push({ ...it.playerFootprint, properties: { kind: "mine-fp" } });
-    features.push({ type: "Feature", properties: { kind: "error" }, geometry: { type: "LineString", coordinates: [it.placed, it.place.centroid] } });
-    features.push({ type: "Feature", properties: { kind: "mine-pt" }, geometry: { type: "Point", coordinates: it.placed } });
+    if (it.placed) {
+      features.push({ type: "Feature", properties: { kind: "error" }, geometry: { type: "LineString", coordinates: [it.placed, it.place.centroid] } });
+      features.push({ type: "Feature", properties: { kind: "mine-pt" }, geometry: { type: "Point", coordinates: it.placed } });
+    }
     features.push({ type: "Feature", properties: { kind: "real-pt", label: String(it.index) }, geometry: { type: "Point", coordinates: it.place.centroid } });
   }
   (map.getSource("review") as GeoJSONSource).setData({ type: "FeatureCollection", features });

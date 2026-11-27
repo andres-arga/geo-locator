@@ -1,6 +1,6 @@
 import { ROUNDS_PER_GAME } from "../config/game";
 import type { Place } from "../cities/placeTypes";
-import { scorePlacement, type GameOptions, type Placement, type ScoreBreakdown } from "./scoring";
+import { scorePlacement, timedOutScore, type GameOptions, type Placement, type ScoreBreakdown } from "./scoring";
 
 /**
  * Game flow, independent of the DOM and the map:
@@ -75,11 +75,22 @@ export function placePiece(state: GameState, placement: Partial<Placement> & Pic
   return { ...state, rounds: replaceAt(state.rounds, state.current, next), phase: "adjusting" };
 }
 
-export function confirmPiece(state: GameState): GameState {
+export function confirmPiece(state: GameState, secondsLeft?: number): GameState {
   if (state.phase !== "adjusting") return state;
   const round = currentRound(state);
-  const score = scorePlacement(round.place, round.placement!, state.options);
+  const score = scorePlacement(round.place, round.placement!, state.options, secondsLeft);
   return { ...state, rounds: replaceAt(state.rounds, state.current, { ...round, score }), phase: "result" };
+}
+
+/**
+ * Contrarreloj ran out: a dropped piece is confirmed where it is (no time bonus);
+ * a piece still in the panel scores 0.
+ */
+export function timeOut(state: GameState): GameState {
+  if (state.phase === "adjusting") return confirmPiece(state, 0);
+  if (state.phase !== "placing") return state;
+  const round = currentRound(state);
+  return { ...state, rounds: replaceAt(state.rounds, state.current, { ...round, score: timedOutScore(state.options) }), phase: "result" };
 }
 
 export function nextRound(state: GameState): GameState {

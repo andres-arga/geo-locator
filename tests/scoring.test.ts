@@ -117,3 +117,30 @@ describe("maximums", () => {
     expect(maxPointsPerGame(opts({ level: "hard", size: true, orientation: true }))).toBe(25200);
   });
 });
+
+describe("contrarreloj", () => {
+  const perfect = { center: [-58.4, -34.6] as [number, number], sizeRatio: 1, bearing: 90 };
+
+  it("adds up to +20 % for leftover time and applies the timer multiplier", () => {
+    const o = opts({ timer: "normal" }); // 60 s, ×1.5
+    const full = scorePlacement(place(), perfect, o, 60);
+    expect(full.timeBonus).toMatchObject({ secondsLeft: 60, seconds: 60 });
+    expect(full.timeBonus!.points).toBeCloseTo(200, 6);
+    expect(full.total).toBe(1800); // (1000 + 200) × 1.5
+    const half = scorePlacement(place(), perfect, o, 30);
+    expect(half.total).toBe(1650); // (1000 + 100) × 1.5
+    expect(scorePlacement(place(), perfect, o, 0).total).toBe(1500);
+  });
+
+  it("clamps the leftover time and ignores it without a clock", () => {
+    expect(scorePlacement(place(), perfect, opts({ timer: "hard" }), 999).timeBonus!.secondsLeft).toBe(30);
+    expect(scorePlacement(place(), perfect, opts(), 40).timeBonus).toBeUndefined();
+    expect(scorePlacement(place(), perfect, opts({ timer: "off" }), 40).total).toBe(1000);
+  });
+
+  it("combines map level and timer multipliers in the maximum", () => {
+    // hard map ×2, exigente ×2, with the 20 % bonus: 1000 × 1.2 × 4
+    expect(maxPointsPerItem(opts({ level: "hard", timer: "hard" }))).toBeCloseTo(4800, 6);
+    expect(maxPointsPerItem(opts({ timer: "relaxed", size: true }))).toBeCloseTo(1400 * 1.2 * 1.25, 6);
+  });
+});

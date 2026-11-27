@@ -18,11 +18,14 @@ describe("recordKey", () => {
       recordKey("caba", { ...base, streetNames: true }),
       recordKey("otra", base),
       recordKey("caba", { ...base, length: "full" }),
+      recordKey("caba", { ...base, timer: "hard" }),
+      recordKey("caba", { ...base, timer: "relaxed" }),
     ]);
-    expect(keys.size).toBe(8);
+    expect(keys.size).toBe(10);
   });
   it("quick games keep the original keys (existing records survive)", () => {
     expect(recordKey("caba", { ...base, length: "quick" })).toBe(recordKey("caba", base));
+    expect(recordKey("caba", { ...base, timer: "off" })).toBe(recordKey("caba", base));
   });
   it("ignores street names outside the easy level", () => {
     expect(recordKey("caba", { ...base, level: "hard", streetNames: true })).toBe(recordKey("caba", { ...base, level: "hard" }));

@@ -69,10 +69,10 @@ async function start() {
   await cm.ready;
   game?.destroy();
   cm.map.jumpTo({ center: cm.city.center, zoom: cm.city.zoom });
-  const { level, size, orientation } = settings;
+  const { level, size, orientation, timer } = settings;
   const places = filterPlaces(placesByCity[cm.city.id] ?? [], settings.placeSet);
   const rounds = settings.length === "full" ? places.length : undefined;
-  game = new GameController(cm.map, cm.el, gameEl, cm.city, places, { level, size, orientation }, recordKey(cm.city.id, settings), rounds);
+  game = new GameController(cm.map, cm.el, gameEl, cm.city, places, { level, size, orientation, timer }, recordKey(cm.city.id, settings), rounds);
 }
 
 function useSettings(s: Settings) {

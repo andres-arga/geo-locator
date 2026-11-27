@@ -1,4 +1,4 @@
-import { MAP_LEVELS, ROUNDS_PER_GAME, type MapLevel } from "../config/game";
+import { MAP_LEVELS, ROUNDS_PER_GAME, TIMER_MODES, type MapLevel, type TimerMode } from "../config/game";
 import { maxPointsPerGame, type GameOptions } from "../game/scoring";
 import type { PlaceSet } from "../game/state";
 import type { BestScore } from "../game/records";
@@ -15,17 +15,18 @@ export type GameLength = "quick" | "full";
 export interface Settings extends GameOptions {
   city: string;
   length: GameLength;
+  timer: TimerMode;
   streetNames: boolean;
   placeSet: PlaceSet;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  city: DEFAULT_CITY, length: "quick", level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all",
+  city: DEFAULT_CITY, length: "quick", timer: "off", level: "easy", size: false, orientation: false, streetNames: false, placeSet: "all",
 };
 
 export function sameSettings(a: Settings, b: Settings): boolean {
   return (
-    a.city === b.city && a.length === b.length && a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
+    a.city === b.city && a.length === b.length && a.timer === b.timer && a.level === b.level && a.size === b.size && a.orientation === b.orientation &&
     a.streetNames === b.streetNames && a.placeSet === b.placeSet
   );
 }
@@ -51,7 +52,8 @@ export function loadSettings(): Settings {
       const placeSet: PlaceSet = ["all", "stadiums", "landmarks"].includes(raw.placeSet) ? raw.placeSet : "all";
       const city = typeof raw.city === "string" && raw.city in CITIES ? raw.city : DEFAULT_CITY;
       const length: GameLength = raw.length === "full" ? "full" : "quick";
-      return { city, length, level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
+      const timer: TimerMode = raw.timer in TIMER_MODES ? raw.timer : "off";
+      return { city, length, timer, level: raw.level, size: !!raw.size, orientation: !!raw.orientation, streetNames: !!raw.streetNames, placeSet };
     }
   } catch {
     /* storage unavailable or corrupt: use defaults */
@@ -122,6 +124,13 @@ export function mountSettingsForm(
         <label class="toggle ${draft.level !== "easy" ? "disabled" : ""}"><input type="checkbox" name="streetNames" ${draft.streetNames ? "checked" : ""} ${draft.level !== "easy" ? "disabled" : ""}>
           Mostrar nombres de calles <span class="muted">(solo en Fácil)</span></label>
       </fieldset>
+      <fieldset><legend>Contrarreloj</legend>
+        <div class="timer-choices">${(Object.entries(TIMER_MODES) as [TimerMode, (typeof TIMER_MODES)[TimerMode]][])
+          .map(([id, t]) => `<label class="choice"><input type="radio" name="timer" value="${id}" ${draft.timer === id ? "checked" : ""}>
+            <span><strong>${t.label}</strong>${t.seconds ? ` <span class="muted">${t.seconds} s · ×${String(t.multiplier).replace(".", ",")}</span>` : ""}</span></label>`)
+          .join("")}</div>
+        <p class="muted fieldset-help">${draft.timer === "off" ? "Sin límite de tiempo." : "Tiempo por lugar. Lo que sobra suma hasta +20 %; si se acaba, la pieza se confirma donde esté (o vale 0 si no la soltaste)."}</p>
+      </fieldset>
       <fieldset><legend>Modificadores</legend>
         <label class="toggle"><input type="checkbox" name="size" ${draft.size ? "checked" : ""}> Acertar tamaño <span class="muted">+400 pts por lugar</span></label>
         <label class="toggle"><input type="checkbox" name="orientation" ${draft.orientation ? "checked" : ""}> Acertar orientación <span class="muted">+400 pts por lugar</span></label>
@@ -137,6 +146,7 @@ export function mountSettingsForm(
         else if (input.name === "placeSet") draft = { ...draft, placeSet: input.value as PlaceSet };
         else if (input.name === "city") draft = { ...draft, city: input.value };
         else if (input.name === "length") draft = { ...draft, length: input.value as GameLength };
+        else if (input.name === "timer") draft = { ...draft, timer: input.value as TimerMode };
         else draft = { ...draft, [input.name]: input.checked };
         render(input.name, input.type === "radio" ? input.value : undefined);
         onChange({ ...draft });

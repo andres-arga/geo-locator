@@ -22,6 +22,9 @@ Sitio 100 % estático (Vite + TypeScript + MapLibre GL JS + turf.js), sin backen
     el slider, `+`/`−`, Alt + rueda o pellizcando en el celular.
   - *Acertar orientación*: se gira la flecha de la fachada con su manija, el slider,
     `Q`/`E` (Shift = fino) o con dos dedos.
+- **Contrarreloj** (opcional): Relajado 90 s ×1,25, Normal 60 s ×1,5 o Exigente 30 s ×2 por
+  lugar. El tiempo que sobra suma hasta +20 %; si se acaba, la pieza se confirma donde esté
+  (o vale 0 si no se llegó a soltar).
 - Los récords se guardan en el navegador, uno por combinación de opciones.
 
 ## Desarrollo

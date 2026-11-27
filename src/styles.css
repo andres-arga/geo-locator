@@ -278,3 +278,22 @@ fieldset.cities { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
 .strip.many { gap: 3px; }
 .strip.many li { width: 24px; height: 24px; border-width: 1.5px; border-radius: 6px; }
 .strip.many li img { width: 18px; height: 18px; }
+
+/* ---------- Contrarreloj ---------- */
+.clock {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 3;
+  font: 700 22px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink);
+  background: rgba(255,255,255,.95); border: 2px solid var(--accent); border-radius: 999px; padding: 6px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18); pointer-events: none;
+}
+.clock.hidden, .clock-inline.hidden { visibility: hidden; }
+.clock.warn, .clock-inline.warn { color: #8a5a00; border-color: #e0a800; background: #fff6d6; }
+.clock.danger, .clock-inline.danger { color: #fff; border-color: #c0392b; background: #c0392b; animation: clock-pulse 1s ease-in-out infinite; }
+@keyframes clock-pulse { 50% { transform: translateX(-50%) scale(1.08); } }
+.clock-inline.danger { animation: none; }
+.panel-clock { display: flex; align-items: center; gap: 6px; flex-basis: 100%; }
+.clock-inline { font-weight: 700; font-variant-numeric: tabular-nums; border: 1.5px solid var(--accent); border-radius: 999px; padding: 2px 10px; font-size: 14px; }
+.sound-btn { font-size: 16px; padding: 2px 6px; margin-left: auto; }
+.timer-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.fieldset-help { margin: 0; font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .clock.danger { animation: none; } }

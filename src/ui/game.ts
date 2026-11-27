@@ -2,10 +2,10 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { CityConfig } from "../cities";
 import type { Place } from "../cities/placeTypes";
 import { modelUrl } from "../assets/models";
-import { MAP_LEVELS } from "../config/game";
-import { maxPointsPerGame, type GameOptions } from "../game/scoring";
+import { TIMER_MODES } from "../config/game";
+import { maxPointsPerGame, totalMultiplier, type GameOptions } from "../game/scoring";
 import {
-  confirmPiece, currentRound, newGame, nextRound, placePiece, totalScore, type GameState,
+  confirmPiece, currentRound, newGame, nextRound, placePiece, timeOut, totalScore, type GameState,
 } from "../game/state";
 import { clearResult, clearReview, createPinElement, showResult, showReview, type ReviewItem } from "../map/overlays";
 import { MAX_DIAMETER_M, MIN_DIAMETER_M, SilhouettePiece } from "../map/piece";
@@ -25,6 +25,9 @@ export class GameController {
   private offKeys: (() => void) | null = null;
   private recordResult: { previous: BestScore | null; isRecord: boolean } | null = null;
   private disposeDrag: (() => void) | null = null;
+  /** Contrarreloj state for the current round. */
+  private clock: { deadline: number; seconds: number; handle: number; beeped: Set<number> } | null = null;
+  private clockEl: HTMLElement | null = null;
 
   constructor(
     private map: MlMap,
@@ -42,7 +45,71 @@ export class GameController {
     const keys = (e: KeyboardEvent) => this.key(e);
     document.addEventListener("keydown", keys, true);
     this.offKeys = () => document.removeEventListener("keydown", keys, true);
+    if (this.timerSeconds) {
+      this.clockEl = document.createElement("div");
+      this.clockEl.className = "clock";
+      this.clockEl.setAttribute("role", "timer");
+      this.mapEl.appendChild(this.clockEl);
+    }
     this.render();
+    this.startClock();
+  }
+
+  // ------------------------------------------------------------- contrarreloj
+
+  private get timerSeconds(): number | null {
+    return TIMER_MODES[this.state.options.timer ?? "off"].seconds;
+  }
+
+  private startClock() {
+    this.stopClock();
+    const seconds = this.timerSeconds;
+    if (!seconds || this.state.phase !== "placing") return;
+    this.clock = { deadline: performance.now() + seconds * 1000, seconds, handle: 0, beeped: new Set() };
+    this.clock.handle = window.setInterval(() => this.tick(), 200);
+    this.tick();
+  }
+
+  private stopClock() {
+    if (this.clock) window.clearInterval(this.clock.handle);
+    this.clock = null;
+    this.clockEl?.classList.add("hidden");
+  }
+
+  private secondsLeft(): number {
+    return this.clock ? Math.max(0, (this.clock.deadline - performance.now()) / 1000) : 0;
+  }
+
+  private tick() {
+    if (!this.clock) return;
+    const left = this.secondsLeft();
+    const whole = Math.ceil(left);
+    const text = `⏱ ${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+    for (const el of [this.clockEl, this.panel.querySelector<HTMLElement>("[data-clock]")]) {
+      if (!el) continue;
+      el.textContent = text;
+      el.classList.remove("hidden");
+      el.classList.toggle("warn", left <= 10 && left > 5);
+      el.classList.toggle("danger", left <= 5);
+    }
+    if (whole >= 1 && whole <= 5 && !this.clock.beeped.has(whole)) {
+      this.clock.beeped.add(whole);
+      beep(whole === 1 ? 990 : 740);
+    }
+    if (left <= 0) {
+      this.stopClock();
+      this.onTimeout();
+    }
+  }
+
+  /** Time is up: confirm the dropped piece where it is, or score 0 if it was never dropped. */
+  private onTimeout() {
+    this.disposeDrag?.();
+    this.disposeDrag = null;
+    document.querySelector(".drag-ghost")?.remove();
+    document.body.classList.remove("dragging");
+    this.state = timeOut(this.state);
+    this.showRoundResult();
   }
 
   /** The current place can be rotated (orientation modifier on and place not excluded). */
@@ -59,6 +126,8 @@ export class GameController {
   destroy() {
     this.disposeDrag?.();
     this.offKeys?.();
+    this.stopClock();
+    this.clockEl?.remove();
     this.removePiece();
     clearResult(this.map);
     clearReview(this.map);
@@ -73,6 +142,7 @@ export class GameController {
   }
 
   private drop(center: [number, number]) {
+    if (this.state.phase !== "placing" && this.state.phase !== "adjusting") return; // e.g. a drag ending after time ran out
     const { place } = currentRound(this.state);
     this.removePiece();
     // The piece is always the real silhouette. Without modifiers it shows the real size
@@ -144,12 +214,20 @@ export class GameController {
   }
 
   private confirm() {
-    this.state = confirmPiece(this.state);
+    const left = this.clock ? this.secondsLeft() : undefined;
+    this.stopClock();
+    this.state = confirmPiece(this.state, left);
+    this.showRoundResult();
+  }
+
+  /** Reveal the real place (and the player's piece, if any) after confirming or timing out. */
+  private showRoundResult() {
     const round = currentRound(this.state);
     this.piece?.setLocked(true);
-    const placed = round.placement!.center;
+    const placed = round.placement?.center ?? null;
     showResult(this.map, round.place, placed, this.state.options.orientation);
-    const pts = [placed, round.place.centroid, ...(vertices(round.place.footprint) as [number, number][])];
+    const pts = [round.place.centroid, ...(vertices(round.place.footprint) as [number, number][])];
+    if (placed) pts.push(placed);
     if (this.piece) pts.push(...(vertices(this.piece.footprint()) as [number, number][]));
     const [w, s, e, n] = bounds(pts);
     this.map.fitBounds([[w, s], [e, n]], { padding: 80, maxZoom: 16.5, duration: motion(900) });
@@ -172,6 +250,7 @@ export class GameController {
     // Back to the neutral city view so the previous answer does not hint the next one.
     this.map.easeTo({ center: this.city.center, zoom: this.city.zoom, duration: motion(700) });
     this.render();
+    this.startClock();
   }
 
   /** Player's silhouette for a finished round. */
@@ -186,11 +265,11 @@ export class GameController {
   /** Final review on the map: every round (index null) or one of them. */
   private review(index: number | null) {
     const items: ReviewItem[] = this.state.rounds
-      .map((r, i) => ({ index: i + 1, place: r.place, placed: r.placement!.center, playerFootprint: this.playerFootprint(i) }))
+      .map((r, i) => ({ index: i + 1, place: r.place, placed: r.placement?.center ?? null, playerFootprint: this.playerFootprint(i) }))
       .filter((_, i) => index === null || i === index);
     showReview(this.map, items);
     const pts = items.flatMap((it) => [
-      it.placed,
+      ...(it.placed ? [it.placed] : []),
       ...(vertices(it.place.footprint) as [number, number][]),
       ...(it.playerFootprint ? (vertices(it.playerFootprint) as [number, number][]) : []),
     ]);
@@ -207,11 +286,13 @@ export class GameController {
     this.disposeDrag?.();
     this.disposeDrag = null;
     const s = this.state;
-    const mult = MAP_LEVELS[s.options.level].multiplier;
+    const mult = String(totalMultiplier(s.options)).replace(".", ",");
     const header = `
       <header class="panel-head">
         <div><strong>${s.phase === "finished" ? "Partida terminada" : `Lugar ${s.current + 1} de ${s.rounds.length}`}</strong></div>
         <div class="panel-score">${formatPoints(totalScore(s))} pts <span class="muted">/ máx ${formatPoints(maxPointsPerGame(s.options, s.rounds.length))} (×${mult})</span></div>
+        ${this.timerSeconds && s.phase !== "finished" ? `<div class="panel-clock"><span class="clock-inline hidden" data-clock></span>
+          <button class="icon-btn sound-btn" data-action="sound" aria-pressed="${soundOn()}" title="${soundOn() ? "Silenciar avisos" : "Activar sonido de avisos"}">${soundOn() ? "🔊" : "🔇"}</button></div>` : ""}
       </header>
       <ol class="strip${s.rounds.length > 10 ? " many" : ""}">${s.rounds
         .map((r, i) => {
@@ -251,14 +332,22 @@ export class GameController {
     }
     // result
     const last = s.current === s.rounds.length - 1;
-    const mult = MAP_LEVELS[s.options.level].multiplier;
+    const mult = score!.multiplier;
+    if (score!.timedOut) {
+      return `${card}
+        <p class="note">⏱ Se acabó el tiempo antes de soltar el lugar: suma 0 puntos. En el mapa está la ubicación real.</p>
+        <p class="legend"><span class="sw real"></span> ubicación real</p>
+        <button class="btn primary" data-action="next">${last ? "Ver resultado final" : "Siguiente lugar"}</button>`;
+    }
+    const tb = score!.timeBonus;
     return `${card}
       <dl class="result">
         <dt>Distancia</dt><dd>${formatDistance(score!.distanceM)}</dd>
         <dt>Posición</dt><dd>${formatPoints(score!.position.points)} / ${formatPoints(score!.position.max)}</dd>
         ${this.sizeResult()}
         ${this.orientationResult()}
-        ${mult === 1 ? "" : `<dt>Multiplicador</dt><dd>${formatPoints(score!.subtotal)} × ${String(mult).replace(".", ",")}</dd>`}
+        ${tb ? `<dt>Bonus tiempo</dt><dd>+${formatPoints(tb.points)} <span class="muted">(sobraron ${Math.floor(tb.secondsLeft)} s)</span></dd>` : ""}
+        ${mult === 1 ? "" : `<dt>Multiplicador</dt><dd>${formatPoints(score!.subtotal)} × ${String(+mult.toFixed(3)).replace(".", ",")}</dd>`}
         <dt>Total ronda</dt><dd><strong>${formatPoints(score!.total)}</strong></dd>
       </dl>
       <p class="legend"><span class="sw real"></span> ubicación real · <span class="sw mine"></span> tu pieza · <span class="sw err"></span> distancia</p>
@@ -268,14 +357,20 @@ export class GameController {
   private summary(): string {
     const s = this.state;
     const o = s.options;
-    const mult = MAP_LEVELS[o.level].multiplier;
+    const mult = +totalMultiplier(o).toFixed(3);
     const pts = (c: { points: number } | undefined) => (c ? formatPoints(c.points) : "");
     const rows = s.rounds
       .map((r, i) => {
         const sc = r.score!;
-        const parts = [`<span>${formatDistance(sc.distanceM)}</span>`, `<span title="Posición">Pos ${pts(sc.position)}</span>`];
+        const parts = sc.timedOut
+          ? [`<span>⏱ sin tiempo</span>`]
+          : [`<span>${formatDistance(sc.distanceM)}</span>`, `<span title="Posición">Pos ${pts(sc.position)}</span>`];
+        if (sc.timedOut) return `<li data-review="${i}" tabindex="0" title="Ver en el mapa">
+          <div class="row-top"><span class="num">${i + 1}</span><span class="name">${esc(r.place.name)}</span><strong>0</strong></div>
+          <div class="row-detail">${parts.join(" · ")}</div></li>`;
         if (o.size) parts.push(`<span title="Tamaño">Tam ${pts(sc.size)}${sc.size?.compensated ? "*" : ""}</span>`);
         if (o.orientation) parts.push(`<span title="Orientación">Ori ${pts(sc.orientation)}${sc.orientation?.compensated ? "*" : ""}</span>`);
+        if (sc.timeBonus) parts.push(`<span title="Bonus por tiempo">⏱ +${pts(sc.timeBonus)}</span>`);
         return `<li data-review="${i}" tabindex="0" title="Ver en el mapa">
           <div class="row-top"><span class="num">${i + 1}</span><span class="name">${esc(r.place.name)}</span><strong>${formatPoints(sc.total)}</strong></div>
           <div class="row-detail">${parts.join(" · ")}</div></li>`;
@@ -365,6 +460,11 @@ export class GameController {
     on("confirm", () => this.confirm());
     on("next", () => this.next());
     on("review-all", () => this.review(null));
+    on("sound", () => {
+      setSound(!soundOn());
+      this.render();
+      this.tick();
+    });
     this.panel.querySelectorAll<HTMLElement>("[data-review]").forEach((row) => {
       const go = () => this.review(Number(row.dataset.review));
       row.addEventListener("click", go);
@@ -407,6 +507,46 @@ function log2Step(m: number): number {
 
 function formatMeters(m: number): string {
   return `${Math.round(m)} m`;
+}
+
+// ------------------------------------------------------------------ sound
+
+const SOUND_KEY = "geo-locator:sound";
+
+function soundOn(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+function setSound(on: boolean) {
+  try {
+    localStorage.setItem(SOUND_KEY, on ? "on" : "off");
+  } catch {
+    /* ignore */
+  }
+}
+
+let audio: AudioContext | null = null;
+
+/** Short beep for the last seconds of the contrarreloj (Web Audio, no files). */
+function beep(freq: number) {
+  if (!soundOn()) return;
+  try {
+    audio ??= new AudioContext();
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.12, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.12);
+    osc.connect(gain).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.13);
+  } catch {
+    /* audio unavailable */
+  }
 }
 
 /** Animation length, or 0 when the user asked the system for reduced motion. */

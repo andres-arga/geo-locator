@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { confirmPiece, countBySet, filterPlaces, newGame, nextRound, pickPlaces, placePiece, totalScore } from "../src/game/state";
+import { confirmPiece, countBySet, filterPlaces, newGame, nextRound, pickPlaces, placePiece, timeOut, totalScore } from "../src/game/state";
 import type { Place } from "../src/cities/placeTypes";
 
 // Synthetic places (not real data).
@@ -69,5 +69,23 @@ describe("place sets", () => {
     const g = newGame(filterPlaces(places, "stadiums"), { level: "easy", size: false, orientation: false });
     expect(g.rounds).toHaveLength(3);
     expect(new Set(g.rounds.map((r) => r.place.id)).size).toBe(3);
+  });
+});
+
+describe("contrarreloj time out", () => {
+  const options = { level: "easy" as const, size: false, orientation: false, timer: "normal" as const };
+  it("scores 0 when the piece was never dropped", () => {
+    const s = timeOut(newGame(places, options, seeded(3), 2));
+    expect(s.phase).toBe("result");
+    expect(s.rounds[0].score).toMatchObject({ timedOut: true, total: 0 });
+    expect(s.rounds[0].placement).toBeNull();
+  });
+  it("confirms a dropped piece where it is, without time bonus", () => {
+    let s = newGame(places, options, seeded(3), 2);
+    s = timeOut(placePiece(s, { center: s.rounds[0].place.centroid }));
+    expect(s.phase).toBe("result");
+    expect(s.rounds[0].score!.timedOut).toBeUndefined();
+    expect(s.rounds[0].score!.timeBonus!.points).toBe(0);
+    expect(s.rounds[0].score!.total).toBe(1500); // 1000 × 1.5, no bonus
   });
 });
